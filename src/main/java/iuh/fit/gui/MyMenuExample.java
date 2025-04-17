@@ -68,7 +68,9 @@ public class MyMenuExample {
 	private static Form_CapNhatNhaSanXuat update_NhaSanXuat;
 	private static Form_CapNhatTaiKhoan update_TaiKhoan;
 	private static Form_CapNhatPhieuDat update_PhieuDat;
-	
+    private static JMenuItem lapPhieuNhapThuoc;
+    private static Form_PhieuNhapThuoc plt;
+
     public static void createAndShowGUI() {
         // Tạo frame
         frame = new JFrame("Chương trình quản lý nhà thuốc KOSMEN");
@@ -145,6 +147,8 @@ public class MyMenuExample {
         doiTra.setPreferredSize(new Dimension(110, 30));
         lapHD = new JMenuItem("Lập hóa đơn");
         lapHD.setPreferredSize(new Dimension(110, 30));
+        lapPhieuNhapThuoc = new JMenuItem("Lập phiếu nhập thuốc");
+        lapPhieuNhapThuoc.setPreferredSize(new Dimension(110, 30));
         
         tkThang = new JMenuItem("Thống kê tháng");
         tkNgay = new JMenuItem("Thống kê ngày");
@@ -194,6 +198,7 @@ public class MyMenuExample {
         xuLy.add(doiTra);
         xuLy.add(lapHD);
         xuLy.add(datThuoc);
+        xuLy.add(lapPhieuNhapThuoc);
         
 //        thongKe.add(tkNgay);
 //        thongKe.add(tkThang);
@@ -221,6 +226,14 @@ public class MyMenuExample {
 				displayDoiTra();
 			}
 		});
+        lapPhieuNhapThuoc.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // TODO Auto-generated method stub
+                displayLapPhieuNhapThuoc();
+            }
+        });
         
         lapHD.addActionListener(new ActionListener() {
 			
@@ -505,6 +518,8 @@ public class MyMenuExample {
         doiTra.setPreferredSize(new Dimension(110, 30));
         lapHD = new JMenuItem("Lập hóa đơn");
         lapHD.setPreferredSize(new Dimension(110, 30));
+        lapPhieuNhapThuoc = new JMenuItem("Lập phiếu nhập thuốc");
+        lapPhieuNhapThuoc.setPreferredSize(new Dimension(110, 30));
         
         tkThang = new JMenuItem("Thống kê tháng");
         tkNgay = new JMenuItem("Thống kê ngày");
@@ -552,10 +567,11 @@ public class MyMenuExample {
         capNhat.setEnabled(false);
         
         
-        
+
         xuLy.add(doiTra);
         xuLy.add(lapHD);
         xuLy.add(datThuoc);
+        xuLy.add(lapPhieuNhapThuoc);
         
 //        thongKe.add(tkNgay);
 //        thongKe.add(tkThang);
@@ -583,6 +599,14 @@ public class MyMenuExample {
 				displayDoiTra();
 			}
 		});
+        lapPhieuNhapThuoc.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // TODO Auto-generated method stub
+                displayLapPhieuNhapThuoc();
+            }
+        });
         
         lapHD.addActionListener(new ActionListener() {
 			
@@ -918,6 +942,13 @@ public class MyMenuExample {
     	nsx = new Form_NhaSanXuat();
     	contentPanel.add(nsx, BorderLayout.CENTER);//hiển thị lên menu 
     	contentPanel.revalidate(); // Cập nhật giao diện
+        contentPanel.repaint(); // Vẽ lại panel
+    }
+    private static void displayLapPhieuNhapThuoc() {
+        contentPanel.removeAll();
+        plt = new Form_PhieuNhapThuoc();
+        contentPanel.add(plt, BorderLayout.CENTER);//hiển thị lên menu
+        contentPanel.revalidate(); // Cập nhật giao diện
         contentPanel.repaint(); // Vẽ lại panel
     }
     
