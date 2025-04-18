@@ -17,6 +17,7 @@ import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class Form_DangNhap extends JFrame {
     private JTextField txtTenDangNhap;
@@ -114,7 +115,14 @@ public class Form_DangNhap extends JFrame {
         				String tenDN = txtTenDangNhap.getText().trim();
         				@SuppressWarnings("deprecation")
 						String mk = passwordField.getText().trim();
-                        TaiKhoan tk = taiKhoanService.findById(tenDN);
+                        List<TaiKhoan> list = taiKhoanService.getAll();
+                        TaiKhoan tk = null;
+                        for (TaiKhoan taiKhoan : list) {
+                            if (taiKhoan.getTenTK().equals(tenDN)) {
+                                tk = taiKhoan;
+                                break;
+                            }
+                        }
                         // Kiểm tra thông tin đăng nhập
         				if(txtTenDangNhap.getText().trim().equals("") || passwordField.getText().trim().equals(""))
         				{
