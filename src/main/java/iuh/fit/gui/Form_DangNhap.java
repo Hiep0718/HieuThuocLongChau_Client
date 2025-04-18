@@ -1,6 +1,9 @@
 package iuh.fit.gui;
 
 
+import model.TaiKhoan;
+import services.TaiKhoanService;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
@@ -9,6 +12,10 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 
 public class Form_DangNhap extends JFrame {
@@ -20,7 +27,7 @@ public class Form_DangNhap extends JFrame {
 	private Component jUS;
 	
 
-    public Form_DangNhap() {
+    public Form_DangNhap() throws MalformedURLException, NotBoundException, RemoteException {
         setTitle("Đăng Nhập");
         setSize(500, 400);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -68,7 +75,7 @@ public class Form_DangNhap extends JFrame {
         loginPanel.add(passwordField, gbc);
 
         btnHuy = new JButton("     Hủy     ");
-        btnHuy.setBackground(new Color(244, 67, 54));
+        btnHuy.setBackground(new Color(193, 164, 162));
         btnHuy.setForeground(Color.WHITE);
         gbc.gridx = 0;
         gbc.gridy = 3; 
@@ -91,6 +98,9 @@ public class Form_DangNhap extends JFrame {
 
         // Thêm backgroundPanel vào JFrame
         add(backgroundPanel);
+        TaiKhoanService taiKhoanService = (TaiKhoanService) Naming.lookup("rmi://localhost:9090/taiKhoanService");
+
+
         // Thêm sự kiện cho nút Đăng Nhập
         btnDangNhap.addActionListener(new ActionListener() {
         
@@ -104,14 +114,25 @@ public class Form_DangNhap extends JFrame {
         				String tenDN = txtTenDangNhap.getText().trim();
         				@SuppressWarnings("deprecation")
 						String mk = passwordField.getText().trim();
+                        TaiKhoan tk = taiKhoanService.findById(tenDN);
+                        // Kiểm tra thông tin đăng nhập
         				if(txtTenDangNhap.getText().trim().equals("") || passwordField.getText().trim().equals(""))
         				{
         					JOptionPane.showMessageDialog(null, "Vui lòng nhập đầy đủ thông tin");
         					trangthai = false;
         				}
-        				else if(true)
+        				else if(tk != null)
         				{
-        					trangthai = true;
+                                if(tk.getMatKhau().equals(mk))
+            					{
+            						JOptionPane.showMessageDialog(null, "Đăng nhập thành công");
+            						trangthai = true;
+            					}
+            					else
+            					{
+            						JOptionPane.showMessageDialog(null, "Sai mật khẩu");
+            						trangthai = false;
+            					}
         				}
         				else
         				{

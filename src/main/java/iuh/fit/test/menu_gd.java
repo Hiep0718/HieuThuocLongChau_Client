@@ -8,6 +8,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 
 public class menu_gd {
 	public static void main(String[] args) {
@@ -26,9 +29,18 @@ public class menu_gd {
 	        } catch (FontFormatException | IOException e) { 
 	            e.printStackTrace();
 	        } 
-		 SwingUtilities.invokeLater(() -> { 
-	            Form_DangNhap frame = new Form_DangNhap();
-	            frame.setVisible(true);
+		 SwingUtilities.invokeLater(() -> {
+             Form_DangNhap frame = null;
+             try {
+                 frame = new Form_DangNhap();
+             } catch (MalformedURLException e) {
+                 throw new RuntimeException(e);
+             } catch (NotBoundException e) {
+                 throw new RuntimeException(e);
+             } catch (RemoteException e) {
+                 throw new RuntimeException(e);
+             }
+             frame.setVisible(true);
 	        });
     }
 }
