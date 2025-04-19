@@ -1,7 +1,9 @@
 package iuh.fit.gui;
 
 
+import model.ChiTietHoaDon;
 import model.Thuoc;
+import services.HoaDonService;
 import services.ThuocService;
 
 import javax.swing.*;
@@ -296,6 +298,13 @@ public class Form_DoiTra extends JPanel implements ActionListener{
         	}
         	
         });
+
+        jtexMaHD.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                layCTHD();  // Gọi phương thức để cập nhật bảng khi nhấn Enter
+            }
+        });
         
         jtexMaHD.addActionListener(this);
         btnTimKiem.addActionListener(this);
@@ -404,6 +413,41 @@ public class Form_DoiTra extends JPanel implements ActionListener{
                     thuoc.getDonViTinh()
             };
             data2.addRow(rowData);
+        }
+    }
+
+    private void layCTHD() {
+        data1.setRowCount(0); // Xóa dữ liệu cũ trong table1
+
+        String maHD = jtexMaHD.getText().trim();
+        if (maHD.isEmpty()) {
+            showMessage("Vui lòng nhập mã hóa đơn!", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        try {
+            HoaDonService hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:9191/hoaDonService");
+            List<ChiTietHoaDon> chiTietList = hoaDonService.layCTHDTheoMaHD(maHD);
+
+            if (chiTietList.isEmpty()) {
+                showMessage("Không tìm thấy chi tiết hóa đơn cho mã: " + maHD, JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+
+            for (ChiTietHoaDon ct : chiTietList) {
+                Object[] row = {
+                        ct.getThuoc().getMaThuoc(),
+                        ct.getThuoc().getTenThuoc(),
+                        ct.getSoLuong(),
+                        ct.getDonGia(),
+                        ct.getDonViTinh()
+                };
+                data1.addRow(row);
+            }
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            showMessage("Lỗi khi lấy dữ liệu từ server: " + ex.getMessage(), JOptionPane.ERROR_MESSAGE);
         }
     }
 	
