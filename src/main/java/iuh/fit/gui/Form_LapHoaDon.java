@@ -1,8 +1,10 @@
 package iuh.fit.gui;
 
 import dao.ThuocDAO;
+import model.KhachHang;
 import model.Thuoc;
 import services.HoaDonService;
+import services.KhachHangService;
 import services.TaiKhoanService;
 import services.ThuocService;
 import services.impl.ThuocServiceImpl;
@@ -20,6 +22,7 @@ import java.rmi.RemoteException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -39,7 +42,7 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
 	private JButton btnQuetMa;
 	private Label lblTieuDe;
 	private JPanel panelTieuDe;
-	private JComboBox<String> cmbSDT;
+	private JTextField cmbSDT;
 	private JLabel lblPDT;
 	private JComboBox<String> cmbPDT;
 	private JPanel panelThuoc2;
@@ -116,7 +119,19 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
         gbc.gridx = 0;
         gbc.gridy = 4;
         lblSDT = new JLabel("Số điện thoại:");
-        cmbSDT = new JComboBox<String>();
+        // Danh sách số điện thoại (có thể lấy từ CSDL)
+        ArrayList<String> phoneList = new ArrayList<String>();
+        try {
+            KhachHangService khachHangService = (KhachHangService) Naming.lookup("rmi://localhost:9090/khachHangService");
+            List<KhachHang> dsKH = khachHangService.getAll();
+            dsKH.forEach(khachHang -> {
+                phoneList.add(khachHang.getSoDienThoai());
+            });
+            cmbSDT = new AutoSuggestTextField(phoneList);
+        } catch (Exception e){
+            JOptionPane.showMessageDialog(this, "Lỗi kết nối đến dịch vụ thuốc: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            cmbSDT = new JTextField();
+        }
         cmbSDT.setPreferredSize(new Dimension(100, 30));    
         panelTacVu.add(lblSDT, gbc);
         gbc.gridx = 1;
@@ -396,13 +411,7 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
     }
     private void updateKH() {
 		// TODO Auto-generated method stub
-    	try {
-    		while (cmbSDT.getItemCount() !=0) {
-        		cmbSDT.removeAllItems();
-    		}
-		} catch (Exception e) {
-			// TODO: handle exception
-		}
+
 
 	}
     private void updatePDT() {
@@ -543,6 +552,22 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
             txtThanhTien.setText("");
             // Xóa dữ liệu trong bảng thuốc đã chọn
             tbmThuocDaChon.setRowCount(0);
+        }
+        if (o.equals(btnThemKH)) {
+            // Tạo đối tượng Form_ADDKH
+            Form_ADDKH addkh = new Form_ADDKH();
+
+            // Lắng nghe sự kiện khi cửa sổ đóng
+            addkh.addWindowListener(new java.awt.event.WindowAdapter() {
+                @Override
+                public void windowClosed(java.awt.event.WindowEvent windowEvent) {
+                    // Gọi updateKH() sau khi cửa sổ đóng
+                    updateKH();
+                }
+            });
+
+            // Hiển thị cửa sổ Form_ADDKH
+            addkh.setVisible(true);
         }
 	}
 
