@@ -490,11 +490,14 @@ public class Form_PhieuDat extends JPanel implements MouseListener,ActionListene
 		for (Thuoc thuoc : dsThuoc) {
 			Object[] rowData = {
 					thuoc.getMaThuoc(),
+					thuoc.getMaThuoc(),
 					thuoc.getTenThuoc(),
-					thuoc.getGiaBan(),
-					thuoc.getGiaNhap(),
+					thuoc.getDonViTinh(),
 					thuoc.getSoLuong(),
-					thuoc.getDonViTinh()
+					thuoc.getGiaBan(),
+
+
+
 			};
 			modelThongTinThuoc.addRow(rowData);
 		}
@@ -518,7 +521,31 @@ public class Form_PhieuDat extends JPanel implements MouseListener,ActionListene
 				Object o=e.getSource();
 				
 				if(o.equals(buttonThem)) {
-					
+					String soLuong=txtSoLuong.getText();
+					int sl=Integer.parseInt(soLuong);
+
+					String soLuongTon=txtThanhPhan.getText();
+					int slt=Integer.parseInt(soLuongTon);
+
+					if(sl>0 && sl<slt ) {
+						String donGia=txtDongia.getText();
+						double dg=Double.parseDouble(donGia)*sl;
+
+						Object [] row= {txtMaThuoc.getText(),txtTenThuoc.getText(),sl,dg};
+						modelGioHang.addRow(row);
+						updateTotalPrice(modelGioHang, txtTongTien);
+
+						int rowTtt=tableThongTinThuoc.getSelectedRow();
+
+						modelThongTinThuoc.setValueAt(slt-sl, rowTtt, 4);
+
+						xoaTrang();
+					}
+					else {
+						JOptionPane.showMessageDialog(JPCen, "Số lượng k hợp lệ");
+					}
+
+
 				}
 				if(o.equals(btnLook)) {
 					
@@ -538,6 +565,16 @@ public class Form_PhieuDat extends JPanel implements MouseListener,ActionListene
 	}
 
 	private void updateTotalPrice(DefaultTableModel modelGioHang2, JTextField txtTongTien2) {
+		double totalPrice = 0;
+
+		// Duyệt qua tất cả các dòng trong bảng để tính tổng giá
+		for (int i = 0; i < modelGioHang2.getRowCount(); i++) {
+			double rowPrice = (Double) modelGioHang2.getValueAt(i, 3); // Lấy giá trị "Thành tiền" từ cột thứ 3
+			totalPrice += rowPrice;
+		}
+
+		// Cập nhật giá trị trong JTextField
+		txtTongTien2.setText(String.valueOf(totalPrice));
 		
 	}
 	@Override
