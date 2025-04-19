@@ -2,6 +2,7 @@ package iuh.fit.gui;
 
 import dao.ThuocDAO;
 import model.Thuoc;
+import services.HoaDonService;
 import services.TaiKhoanService;
 import services.ThuocService;
 import services.impl.ThuocServiceImpl;
@@ -338,7 +339,12 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
         txtSoLuong.addActionListener(this);
 
         txtNhanVien.setText(Form_DangNhap.nhanVien.getTenNV());
-
+        try{
+            HoaDonService hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:9090/hoaDonService");
+            txtMaHD.setText(String.valueOf(hoaDonService.layMaHoaDonMoiNhat() + 1));
+        }catch (Exception e){
+            JOptionPane.showMessageDialog(this, "Lỗi kết nối đến dịch vụ thuốc: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void updateTableThuoc()  {
@@ -503,6 +509,7 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
             updateThanhTien();
             // Bỏ chọn để có thể chọn lại sau
             tblThuoc.clearSelection();
+            tblThuocDaChon.setRowSelectionInterval(0, 0);
         }
     }
 
@@ -513,7 +520,6 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
             Double donGia = (Double) tbmThuocDaChon.getValueAt(i, 2);
             thanhTien += soLuong * donGia;
         }
-
         DecimalFormat df = new DecimalFormat("#,###");
 
         // Gán vào text field (có thể thêm "VNĐ" nếu muốn)
