@@ -2,7 +2,9 @@ package iuh.fit.gui;
 
 
 import com.formdev.flatlaf.extras.FlatSVGIcon;
+import model.KhachHang;
 import model.Thuoc;
+import services.KhachHangService;
 import services.ThuocService;
 
 import javax.swing.*;
@@ -14,6 +16,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.rmi.Naming;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -78,6 +81,7 @@ public class Form_PhieuDat extends JPanel implements MouseListener,ActionListene
 	private DefaultTableModel modelGioHang;
 	private JTable tableGioHang;
 	private List<Thuoc> dsThuoc;
+	private AutoSuggestTextField cmbSDT;
 	
 	public  Form_PhieuDat(){
 		initComBoNent();
@@ -389,20 +393,47 @@ public class Form_PhieuDat extends JPanel implements MouseListener,ActionListene
 	 txtSDT=new JTextField();
 	 txtSDT.setPreferredSize(new Dimension(160,30));
 	 txtSDT.setBorder(new LineBorder(Color.black,1));
-	 
+
+	   ArrayList<String> phoneList = new ArrayList<String>();
+	   try {
+		   KhachHangService khachHangService = (KhachHangService) Naming.lookup("rmi://localhost:9090/khachHangService");
+		   List<KhachHang> dsKH = khachHangService.getAll();
+		   dsKH.forEach(khachHang -> {
+			   phoneList.add(khachHang.getSoDienThoai());
+		   });
+		   cmbSDT = new AutoSuggestTextField(phoneList);
+		   cmbSDT.addSuggestionSelectedListener(phoneNumber -> {
+			   // Look up the customer with this phone number from your data source
+			   // This is just an example - replace with your actual lookup code
+			   try {
+				   KhachHang customer = khachHangService.timBangSDT(phoneNumber);
+				   if (customer != null) {
+					   txtTenKH.setText(customer.getTenKH());
+				   } else {
+					   txtTenKH.setText("Customer not found");
+				   }
+			   } catch (Exception ex) {
+				   txtTenKH.setText("Error: " + ex.getMessage());
+			   }
+		   });
+	   } catch (Exception e){
+		   JOptionPane.showMessageDialog(this, "Lỗi kết nối đến dịch vụ thuốc: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+	   }
+
+
 	  btnAdd=new JButton();
 	 btnAdd.setIcon(new FlatSVGIcon("icons/add.svg"));
 	 btnAdd.setBackground(Color.white);
 	 btnAdd.setPreferredSize(new Dimension(30,30));
 	 btnAdd.addActionListener(this);
-	 
-	  btnLook=new JButton();
+	   cmbSDT.setPreferredSize(new Dimension(100, 30));
+	   btnLook=new JButton();
 	 btnLook.setIcon(new FlatSVGIcon("icons/search.svg"));
 	 btnLook.setBackground(Color.white);
 	 btnLook.setPreferredSize(new Dimension(30,30));
 	 btnLook.addActionListener(this);
 	 jPNoiDungPhieuDat2.add(lblSoDienThoai);
-	 jPNoiDungPhieuDat2.add(txtSDT);
+	 jPNoiDungPhieuDat2.add( cmbSDT);
 	 jPNoiDungPhieuDat2.add(btnLook);
 	 jPNoiDungPhieuDat2.add(btnAdd);
 	 
@@ -547,9 +578,10 @@ public class Form_PhieuDat extends JPanel implements MouseListener,ActionListene
 
 
 				}
-				if(o.equals(btnLook)) {
-					
-				}
+		if(o.equals(btnLook)) {
+
+
+		}
 				if(o.equals(btnAdd)) {
 				}
 				if(o.equals(buttonLuu)) {
