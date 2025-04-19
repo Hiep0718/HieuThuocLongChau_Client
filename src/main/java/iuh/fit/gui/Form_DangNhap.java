@@ -101,7 +101,6 @@ public class Form_DangNhap extends JFrame {
         add(backgroundPanel);
         TaiKhoanService taiKhoanService = (TaiKhoanService) Naming.lookup("rmi://localhost:9090/taiKhoanService");
 
-
         // Thêm sự kiện cho nút Đăng Nhập
         btnDangNhap.addActionListener(new ActionListener() {
         

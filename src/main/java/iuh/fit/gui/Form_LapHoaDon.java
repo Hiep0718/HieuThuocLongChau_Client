@@ -1,13 +1,25 @@
 package iuh.fit.gui;
 
+import dao.ThuocDAO;
+import model.Thuoc;
+import services.TaiKhoanService;
+import services.ThuocService;
+import services.impl.ThuocServiceImpl;
+
 import javax.swing.*;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.net.MalformedURLException;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 
 public class Form_LapHoaDon extends JPanel implements ActionListener{
@@ -37,6 +49,9 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
 	private JButton btnThemKH;
 	private JPanel panelKH;
 	private int flag;
+
+    private List<Thuoc> dsThuoc;
+    private ThuocDAO thuocDAO;
 	
     public Form_LapHoaDon() {
         // Cấu hình cửa sổ
@@ -232,10 +247,11 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
         panelTimKiemThuoc.add(btnQuetMa);
 
         // Bảng thuốc và bảng thuốc đã chọn
-        String[] columnNamesThuoc = {"Mã thuốc", "Tên thuốc", "Đơn giá", "Số lượng tồn", "Đơn vị tính"};
+        String[] columnNamesThuoc = {"Mã thuốc", "Tên thuốc", "Giá bán", "Giá nhập", "Số lượng tồn", "Đơn vị tính"};
         tbmThuoc = new DefaultTableModel(columnNamesThuoc, 0);
         tblThuoc = new JTable(tbmThuoc);
-     // Khai báo listener
+        updateTableThuoc();
+        // Khai báo listener
         listener1 = e -> {
             if (!e.getValueIsAdjusting()) {
                 handleTblThuocSelection();
@@ -321,6 +337,29 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
         
 
         txtSoLuong.addActionListener(this);
+    }
+
+    private void updateTableThuoc()  {
+        // Xóa dữ liệu cũ trong bảng thuốc
+        tbmThuoc.setRowCount(0);
+        try {
+            ThuocService thuocService = (ThuocService) Naming.lookup("rmi://localhost:9090/thuocService");
+            dsThuoc = thuocService.getAll();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Lỗi kết nối đến dịch vụ thuốc: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+        // Thêm dữ liệu mới vào bảng thuốc
+        for (Thuoc thuoc : dsThuoc) {
+            Object[] rowData = {
+                thuoc.getMaThuoc(),
+                thuoc.getTenThuoc(),
+                thuoc.getGiaBan(),
+                thuoc.getGiaNhap(),
+                thuoc.getSoLuong(),
+                thuoc.getDonViTinh()
+            };
+            tbmThuoc.addRow(rowData);
+        }
     }
 
     // Phương thức lấy ngày hiện tại theo định dạng dd/MM/yyyy
