@@ -1,6 +1,7 @@
 package iuh.fit.gui;
 
 
+import model.NhanVien;
 import model.TaiKhoan;
 import services.TaiKhoanService;
 
@@ -26,7 +27,7 @@ public class Form_DangNhap extends JFrame {
     private JButton btnHuy;
 	private JLabel jmk;
 	private Component jUS;
-	
+	public static NhanVien nhanVien;
 
     public Form_DangNhap() throws MalformedURLException, NotBoundException, RemoteException {
         setTitle("Đăng Nhập");
@@ -132,6 +133,7 @@ public class Form_DangNhap extends JFrame {
         				{
                                 if(tk.getMatKhau().equals(mk))
             					{
+                                    nhanVien = tk.getNhanVien();
             						JOptionPane.showMessageDialog(null, "Đăng nhập thành công");
             						trangthai = true;
             					}
