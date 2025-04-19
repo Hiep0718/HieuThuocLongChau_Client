@@ -2,6 +2,8 @@ package iuh.fit.gui;
 
 
 import com.formdev.flatlaf.extras.FlatSVGIcon;
+import model.Thuoc;
+import services.ThuocService;
 
 import javax.swing.*;
 import javax.swing.border.LineBorder;
@@ -11,6 +13,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.rmi.Naming;
+import java.util.List;
 
 
 public class Form_PhieuDat extends JPanel implements MouseListener,ActionListener{
@@ -73,6 +77,7 @@ public class Form_PhieuDat extends JPanel implements MouseListener,ActionListene
 	private JTable tableThongTinThuoc;
 	private DefaultTableModel modelGioHang;
 	private JTable tableGioHang;
+	private List<Thuoc> dsThuoc;
 	
 	public  Form_PhieuDat(){
 		initComBoNent();
@@ -368,11 +373,12 @@ public class Form_PhieuDat extends JPanel implements MouseListener,ActionListene
 	 
 	 lblMaPhieuDat=new JLabel("Nhân viên:");
 	 lblMaPhieuDat.setPreferredSize(new Dimension(130,20));
-	 txtmaPhieuDat=new JTextField(); 
+	 txtmaPhieuDat=new JTextField();
 	 txtmaPhieuDat.setPreferredSize(new Dimension(200,30));
 	 txtmaPhieuDat.setFocusable(false);
      txtmaPhieuDat.setEditable(false);	
      txtmaPhieuDat.setBorder(new LineBorder(Color.black,1));
+	 txtmaPhieuDat.setText(Form_DangNhap.nhanVien.getTenNV());
      
 	 jPNoiDungPhieuDat1.add(lblMaPhieuDat);
 	 jPNoiDungPhieuDat1.add(txtmaPhieuDat);
@@ -470,7 +476,28 @@ public class Form_PhieuDat extends JPanel implements MouseListener,ActionListene
 		
 	 
    }
-	private void updateTableThuoc() {
+
+	private void updateTableThuoc()  {
+		// Xóa dữ liệu cũ trong bảng thuốc
+		modelThongTinThuoc.setRowCount(0);
+		try {
+			ThuocService thuocService = (ThuocService) Naming.lookup("rmi://localhost:9090/thuocService");
+			dsThuoc = thuocService.getAll();
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(this, "Lỗi kết nối đến dịch vụ thuốc: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+		}
+		// Thêm dữ liệu mới vào bảng thuốc
+		for (Thuoc thuoc : dsThuoc) {
+			Object[] rowData = {
+					thuoc.getMaThuoc(),
+					thuoc.getTenThuoc(),
+					thuoc.getGiaBan(),
+					thuoc.getGiaNhap(),
+					thuoc.getSoLuong(),
+					thuoc.getDonViTinh()
+			};
+			modelThongTinThuoc.addRow(rowData);
+		}
 	}
 	public static String getSDT() {
 		 String sdtt=txtSDT.getText();
