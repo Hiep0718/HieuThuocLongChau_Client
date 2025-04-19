@@ -52,7 +52,8 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
 
     private List<Thuoc> dsThuoc;
     private ThuocDAO thuocDAO;
-	
+    private Integer maThuoc;
+
     public Form_LapHoaDon() {
         // Cấu hình cửa sổ
  
@@ -278,7 +279,7 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
         
         scrollThuoc = new JScrollPane(tblThuoc);
 
-        String[] columnNamesThuocDaChon = {"Mã thuốc", "Tên thuốc", "Số lượng", "Đơn giá", "Đơn vị tính"};
+        String[] columnNamesThuocDaChon = {"Mã thuốc", "Tên thuốc", "Đơn giá", "Đơn vị tính", "Số lượng"};
         tbmThuocDaChon = new DefaultTableModel(columnNamesThuocDaChon, 0);
         
         tblThuocDaChon = new JTable(tbmThuocDaChon);
@@ -294,7 +295,9 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
         tblThuocDaChon.getTableHeader().setBackground(new Color(70, 130, 180));
         tblThuocDaChon.getTableHeader().setForeground(Color.WHITE);
         tblThuocDaChon.getTableHeader().setFont(new Font("Open Sans", Font.PLAIN, 14));
-        
+
+
+        // Tạo JScrollPane cho bảng thuốc đã chọn
         scrollThuocDaChon = new JScrollPane(tblThuocDaChon);
         
         panelGioHang = new JPanel();
@@ -319,7 +322,7 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
 
         lblTieuDe.setForeground(Color.BLUE);  // Đặt màu chữ xanh
         panelTieuDe.add(lblTieuDe);
-        //
+
 
         // Thêm hai khu vực vào cửa sổ chính
         add(panelTacVu, BorderLayout.WEST);
@@ -328,14 +331,9 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
         // Xử lý sự kiện các nút 
         btnTaoMoiHD.addActionListener(this);
         btnQuetMa.addActionListener(this);
-        
         btnInHD.addActionListener(this);
-
         btnLuuHD.addActionListener(this);
-
         btnTimKiemThuoc.addActionListener(this);
-        
-
         txtSoLuong.addActionListener(this);
     }
 
@@ -400,11 +398,104 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
     private void updatePDT() {
 
 	}
+
+    private void handleCapNhatThuocDaChon() {
+        try {
+            int soLuongMoi = Integer.parseInt(txtSoLuong.getText());
+
+            // Tìm số lượng tồn kho của thuốc này từ bảng tblThuoc
+            int soLuongTonKho = -1;
+            for (int i = 0; i < tbmThuoc.getRowCount(); i++) {
+                Integer existingMaThuoc = (Integer) tbmThuoc.getValueAt(i, 0);
+                if (existingMaThuoc.equals(maThuoc)) {
+                    soLuongTonKho = (Integer) tbmThuoc.getValueAt(i, 4);
+                    break;
+                }
+            }
+
+            if (soLuongTonKho == -1) {
+                JOptionPane.showMessageDialog(null, "Không tìm thấy thuốc trong kho!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            for (int i = 0; i < tbmThuocDaChon.getRowCount(); i++) {
+                Integer existingMaThuoc = (Integer) tbmThuocDaChon.getValueAt(i, 0);
+                if (existingMaThuoc.equals(maThuoc)) {
+
+                    if (soLuongMoi == 0) {
+                        // Nếu số lượng = 0 thì xóa khỏi bảng
+                        tbmThuocDaChon.removeRow(i);
+                        JOptionPane.showMessageDialog(null, "Đã xóa thuốc khỏi danh sách chọn!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                    } else if (soLuongMoi > soLuongTonKho) {
+                        JOptionPane.showMessageDialog(null, "Số lượng vượt quá tồn kho: "+ soLuongTonKho, "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+                    } else {
+                        // Cập nhật số lượng
+                        tbmThuocDaChon.setValueAt(soLuongMoi, i, 4);
+                        JOptionPane.showMessageDialog(null, "Cập nhật thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                    }
+
+                    break;
+                }
+            }
+
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(null, "Vui lòng nhập đúng định dạng số!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+
+
+
     private void handleTblThuocDaChonSelection() {
+        int selectedRow = tblThuocDaChon.getSelectedRow();
+        if (selectedRow >= 0) {
+            // Lấy dữ liệu từ hàng được chọn trên bảng thuốc đã chọn
+            maThuoc = (Integer) tbmThuocDaChon.getValueAt(selectedRow, 0);
+            String tenThuoc = (String) tbmThuocDaChon.getValueAt(selectedRow, 1);
+            Double giaBan = (Double) tbmThuocDaChon.getValueAt(selectedRow, 2);
+            String donViTinh = (String) tbmThuocDaChon.getValueAt(selectedRow, 3);
+            int soLuong = (int) tbmThuocDaChon.getValueAt(selectedRow, 4);
+
+            txtDonGia.setText(String.valueOf(giaBan));
+            txtTenThuoc.setText(tenThuoc);
+            txtSoLuong.setText(String.valueOf(soLuong));
+            txtDonVi.setText(donViTinh);
+
+            // Bỏ chọn để có thể chọn lại sau
+            tblThuocDaChon.clearSelection();
+        }
 
     }
     private void handleTblThuocSelection() {
+        int selectedRow = tblThuoc.getSelectedRow();
+        if (selectedRow >= 0) {
+            // Lấy dữ liệu từ hàng được chọn trên bảng thuốc
+            int maThuoc = (Integer) tbmThuoc.getValueAt(selectedRow, 0);
+            String tenThuoc = (String) tbmThuoc.getValueAt(selectedRow, 1);
+            Double giaBan = (Double) tbmThuoc.getValueAt(selectedRow, 2);
+            String donViTinh = (String) tbmThuoc.getValueAt(selectedRow, 5);
 
+            boolean daTonTai = false;
+            for (int i = 0; i < tbmThuocDaChon.getRowCount(); i++) {
+                Integer existingMaThuoc = (Integer) tbmThuocDaChon.getValueAt(i, 0);
+                if (existingMaThuoc.equals(maThuoc)) {
+                    // Nếu thuốc đã tồn tại, tăng số lượng lên 1
+                    int currentSoLuong = (int) tbmThuocDaChon.getValueAt(i, 4);
+                    tbmThuocDaChon.setValueAt(currentSoLuong + 1, i, 4);
+                    daTonTai = true;
+                    break;
+                }
+            }
+
+            // Nếu chưa tồn tại thì thêm vào bảng thuốc đã chọn
+            if (!daTonTai) {
+                Object[] rowData = {maThuoc, tenThuoc, giaBan, donViTinh, 1}; // mặc định số lượng là 1
+                tbmThuocDaChon.addRow(rowData);
+            }
+
+            // Bỏ chọn để có thể chọn lại sau
+            tblThuoc.clearSelection();
+        }
     }
     public void xoaBang() {
 
@@ -420,7 +511,10 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-
+        Object o = e.getSource();
+        if (o.equals(txtSoLuong)) {
+            handleCapNhatThuocDaChon();
+        }
 	}
 	public void xoaBangThuoc() {
 
