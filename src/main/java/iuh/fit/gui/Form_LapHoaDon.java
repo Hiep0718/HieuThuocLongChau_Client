@@ -42,7 +42,7 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
 	private JButton btnQuetMa;
 	private Label lblTieuDe;
 	private JPanel panelTieuDe;
-	private JTextField cmbSDT;
+	private AutoSuggestTextField cmbSDT;
 	private JLabel lblPDT;
 	private JComboBox<String> cmbPDT;
 	private JPanel panelThuoc2;
@@ -128,9 +128,22 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
                 phoneList.add(khachHang.getSoDienThoai());
             });
             cmbSDT = new AutoSuggestTextField(phoneList);
+            cmbSDT.addSuggestionSelectedListener(phoneNumber -> {
+                // Look up the customer with this phone number from your data source
+                // This is just an example - replace with your actual lookup code
+                try {
+                    KhachHang customer = khachHangService.timBangSDT(phoneNumber);
+                    if (customer != null) {
+                        txtKhachHang.setText(customer.getTenKH());
+                    } else {
+                        txtKhachHang.setText("Customer not found");
+                    }
+                } catch (Exception ex) {
+                    txtKhachHang.setText("Error: " + ex.getMessage());
+                }
+            });
         } catch (Exception e){
             JOptionPane.showMessageDialog(this, "Lỗi kết nối đến dịch vụ thuốc: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
-            cmbSDT = new JTextField();
         }
         cmbSDT.setPreferredSize(new Dimension(100, 30));    
         panelTacVu.add(lblSDT, gbc);

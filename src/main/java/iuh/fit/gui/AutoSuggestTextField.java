@@ -7,6 +7,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class AutoSuggestTextField extends JTextField {
@@ -16,6 +17,13 @@ public class AutoSuggestTextField extends JTextField {
     private int minimumChars = 1;
     private boolean caseSensitive = false;
     private boolean matchStart = false;
+
+    // Callback interface for suggestion selection
+    public interface SuggestionSelectedListener {
+        void onSuggestionSelected(String suggestion);
+    }
+
+    private List<SuggestionSelectedListener> selectionListeners = new ArrayList<>();
 
     /**
      * Creates an AutoSuggestTextField with the given list of suggestions
@@ -33,6 +41,24 @@ public class AutoSuggestTextField extends JTextField {
      */
     public AutoSuggestTextField() {
         this(new ArrayList<>());
+    }
+
+    /**
+     * Add a listener that will be called when a suggestion is selected
+     * @param listener The listener to be notified
+     */
+    public void addSuggestionSelectedListener(SuggestionSelectedListener listener) {
+        if (listener != null) {
+            selectionListeners.add(listener);
+        }
+    }
+
+    /**
+     * Remove a previously added suggestion selection listener
+     * @param listener The listener to remove
+     */
+    public void removeSuggestionSelectedListener(SuggestionSelectedListener listener) {
+        selectionListeners.remove(listener);
     }
 
     /**
@@ -233,9 +259,13 @@ public class AutoSuggestTextField extends JTextField {
             }
 
             item.addActionListener(e -> {
+                // Set the text in this field
                 setText(suggestion);
                 suggestionsPopup.setVisible(false);
                 requestFocus(); // Keep focus on text field
+
+                // Notify all the listeners
+                notifySuggestionSelected(suggestion);
             });
 
             suggestionsPopup.add(item);
@@ -315,5 +345,27 @@ public class AutoSuggestTextField extends JTextField {
                 ((JMenuItem) component).doClick();
             }
         }
+    }
+
+    // Helper method to notify all listeners when a suggestion is selected
+    private void notifySuggestionSelected(String suggestion) {
+        for (SuggestionSelectedListener listener : selectionListeners) {
+            listener.onSuggestionSelected(suggestion);
+        }
+    }
+
+    // Convenience method to add a simple interaction with another text field
+    public void linkToTextField(JTextField otherField, String fieldName) {
+        addSuggestionSelectedListener(suggestion -> {
+            // Lookup the customer with this phone number
+            try {
+                // Here's where you would normally lookup a customer by phone number
+                // This is just a placeholder showing the concept
+                otherField.setText("Customer with " + fieldName + ": " + suggestion);
+            } catch (Exception ex) {
+                otherField.setText("");
+                System.err.println("Error looking up customer: " + ex.getMessage());
+            }
+        });
     }
 }
