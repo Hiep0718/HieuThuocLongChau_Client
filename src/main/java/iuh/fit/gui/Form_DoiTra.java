@@ -1,6 +1,9 @@
 package iuh.fit.gui;
 
 
+import model.Thuoc;
+import services.ThuocService;
+
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -9,9 +12,11 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
+import java.rmi.Naming;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.List;
 
 
 public class Form_DoiTra extends JPanel implements ActionListener{
@@ -37,6 +42,7 @@ public class Form_DoiTra extends JPanel implements ActionListener{
 	private JTextField jtexSoLuong;
 	private JButton btnTimKiem;
 	private JTextField jtexTimKiem;
+    private List<Thuoc> dsThuoc;
 
 	public Form_DoiTra(){
         setLayout(new BorderLayout());
@@ -157,6 +163,7 @@ public class Form_DoiTra extends JPanel implements ActionListener{
         // tạo table 2
         String[] columnNames2 = {"Mã thuốc", "Tên thuốc", "Đơn giá", "Số lượng tồn", "Danh mục", "Đơn vị tính"};
         data2 = new DefaultTableModel(columnNames2, 0);
+        updateTableThuoc();
         table2 = new JTable(data2);
         JScrollPane scrollPane2 = new JScrollPane(table2);
         scrollPane2.setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.BLUE), "Danh mục thuốc"));
@@ -377,6 +384,27 @@ public class Form_DoiTra extends JPanel implements ActionListener{
 
 	}
 
-	
+    private void updateTableThuoc()  {
+        // Xóa dữ liệu cũ trong bảng thuốc
+        data2.setRowCount(0);
+        try {
+            ThuocService thuocService = (ThuocService) Naming.lookup("rmi://localhost:9090/thuocService");
+            dsThuoc = thuocService.getAll();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Lỗi kết nối đến dịch vụ thuốc: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+        // Thêm dữ liệu mới vào bảng thuốc
+        for (Thuoc thuoc : dsThuoc) {
+            Object[] rowData = {
+                    thuoc.getMaThuoc(),
+                    thuoc.getTenThuoc(),
+                    thuoc.getGiaBan(),
+                    thuoc.getGiaNhap(),
+                    thuoc.getSoLuong(),
+                    thuoc.getDonViTinh()
+            };
+            data2.addRow(rowData);
+        }
+    }
 	
 }
