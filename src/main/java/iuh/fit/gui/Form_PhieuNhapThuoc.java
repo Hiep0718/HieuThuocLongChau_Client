@@ -1,8 +1,11 @@
 package iuh.fit.gui;
 
+import model.ChiTietPhieuNhapThuoc;
 import model.NhaCungCap;
+import model.PhieuNhapThuoc;
 import model.Thuoc;
 import services.NhaSanXuatService;
+import services.PhieuNhapThuocService;
 import services.ThuocService;
 
 import javax.swing.*;
@@ -13,6 +16,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.rmi.Naming;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -545,12 +549,14 @@ public class Form_PhieuNhapThuoc extends JPanel implements ActionListener {
             int maThuoc = Integer.parseInt(tblThuoc.getValueAt(selectedRow, 0).toString());
             String tenThuoc = tblThuoc.getValueAt(selectedRow, 1).toString();
             String donVi = tblThuoc.getValueAt(selectedRow, 5).toString();
-            String nsx = modelNgaySX.toString();
-            String hsd = modelHanSD.toString();
+            // Định dạng ngày để hiển thị
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+            String ngaySX = sdf.format(modelNgaySX.getDate());
+            String hanSD = sdf.format(modelHanSD.getDate());
             int soLuong = Integer.parseInt(txtSoLuong.getText());
             double donGia = Double.parseDouble(txtDonGia.getText());
             double thanhTien = soLuong * donGia;
-            tbmThuocDaChon.addRow(new Object[]{maThuoc, tenThuoc, nsx, hsd, soLuong, donGia, donVi, thanhTien});
+            tbmThuocDaChon.addRow(new Object[]{maThuoc, tenThuoc, ngaySX, hanSD, soLuong, donGia, donVi, thanhTien});
             // Xóa thông tin trong form để nhập thuốc mới
             txtTenThuoc.setText("");
             txtSoLuong.setText("");
@@ -558,12 +564,51 @@ public class Form_PhieuNhapThuoc extends JPanel implements ActionListener {
             txtDonGia.setText("");
             tblThuoc.clearSelection();
         }
+
+        if (o.equals(btnLuuPNT)) {
+            PhieuNhapThuoc phieuNhapThuoc = new PhieuNhapThuoc();
+            phieuNhapThuoc.setNhanVien(Form_DangNhap.nhanVien);
+            phieuNhapThuoc.setNhaCungCap(dsNCC.get(cmbNhaCungCap.getSelectedIndex()));
+            phieuNhapThuoc.setNgayLapPhieuNhap(new Date());
+            List<ChiTietPhieuNhapThuoc> chiTietPhieuNhapThuocs = new ArrayList<ChiTietPhieuNhapThuoc>();
+            for (int i = 0; i < tbmThuocDaChon.getRowCount(); i++) {
+                ChiTietPhieuNhapThuoc chiTietPhieuNhapThuoc = new ChiTietPhieuNhapThuoc();
+                Thuoc thuoc = timTheoMa(Integer.parseInt(tbmThuocDaChon.getValueAt(i, 0).toString()));
+                chiTietPhieuNhapThuoc.setThuoc(thuoc);
+                chiTietPhieuNhapThuoc.setPhieuNhapThuoc(phieuNhapThuoc);
+                chiTietPhieuNhapThuoc.setSoLuong(Integer.parseInt(tbmThuocDaChon.getValueAt(i, 4).toString()));
+                chiTietPhieuNhapThuoc.setDonGia(Double.parseDouble(tbmThuocDaChon.getValueAt(i, 5).toString()));
+                chiTietPhieuNhapThuoc.setDonViTinh(tbmThuocDaChon.getValueAt(i, 6).toString());
+                chiTietPhieuNhapThuocs.add(chiTietPhieuNhapThuoc);
+            }
+            try {
+                PhieuNhapThuocService phieuNhapThuocService = (PhieuNhapThuocService) Naming.lookup("rmi://localhost:9090/phieuNhapThuocService");
+                if (phieuNhapThuocService.luuPhieuNhap(phieuNhapThuoc, chiTietPhieuNhapThuocs)) {
+                    JOptionPane.showMessageDialog(this, "Lưu phiếu nhập thuốc thành công");
+                    clearForm();
+                    updateTableThuoc();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Lưu phiếu nhập thuốc thất bại", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Lỗi khi lưu phiếu nhập thuốc: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+
         if (o.equals(btnTaoMoiPNT)){
             // Tạo mới phiếu nhập thuốc
             clearForm();
             updateTableThuoc();
             updateNhaCungCap();
         }
+    }
+    private Thuoc timTheoMa(int ma) {
+        for (Thuoc thuoc : dsThuoc) {
+            if (thuoc.getMaThuoc() == ma) {
+                return thuoc;
+            }
+        }
+        return null;
     }
 }
 
