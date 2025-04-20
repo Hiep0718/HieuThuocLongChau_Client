@@ -1,14 +1,19 @@
 package iuh.fit.gui;
 
+import model.Thuoc;
+import services.ThuocService;
+
 import javax.swing.*;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.rmi.Naming;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 public class Form_PhieuNhapThuoc extends JPanel implements ActionListener {
     // Các thành phần khu vực tác vụ
@@ -17,8 +22,7 @@ public class Form_PhieuNhapThuoc extends JPanel implements ActionListener {
     private JButton btnTaoMoiPNT, btnInPNT, btnLuuPNT;
 
     // Thành phần mới cho thông tin lô thuốc
-    private JLabel lblMaLo, lblNgaySanXuat, lblHanSuDung;
-    private JTextField txtMaLo;
+    private JLabel lblNgaySanXuat, lblHanSuDung;
     private JSpinner spnNgaySanXuat, spnHanSuDung;
     private SpinnerDateModel modelNgaySX, modelHanSD;
 
@@ -41,6 +45,7 @@ public class Form_PhieuNhapThuoc extends JPanel implements ActionListener {
     private JButton btnThemNCC;
     private JPanel panelNCC;
     private int flag;
+    private List<Thuoc> dsThuoc;
 
     public Form_PhieuNhapThuoc() {
         // Cấu hình cửa sổ
@@ -130,12 +135,7 @@ public class Form_PhieuNhapThuoc extends JPanel implements ActionListener {
         // Thêm thông tin lô thuốc - Mã lô
         gbcThuoc.gridx = 0;
         gbcThuoc.gridy = 2;
-        lblMaLo = new JLabel("Mã lô:");
-        txtMaLo = new JTextField(15);
-        customizeTextField(txtMaLo, true);
-        panelThuoc.add(lblMaLo, gbcThuoc);
-        gbcThuoc.gridx = 1;
-        panelThuoc.add(txtMaLo, gbcThuoc);
+
 
         // Thêm thông tin lô thuốc - Ngày sản xuất
         gbcThuoc.gridx = 0;
@@ -255,7 +255,7 @@ public class Form_PhieuNhapThuoc extends JPanel implements ActionListener {
         panelTimKiemThuoc.add(btnQuetMa);
 
         // Bảng thuốc và bảng thuốc đã chọn
-        String[] columnNamesThuoc = {"Mã thuốc", "Tên thuốc", "Đơn giá", "Đơn vị tính"};
+        String[] columnNamesThuoc = {"Mã thuốc", "Tên thuốc", "Giá bán", "Giá nhập", "Số lượng tồn", "Đơn vị tính"};
         tbmThuoc = new DefaultTableModel(columnNamesThuoc, 0);
         tblThuoc = new JTable(tbmThuoc);
 
@@ -287,7 +287,7 @@ public class Form_PhieuNhapThuoc extends JPanel implements ActionListener {
         scrollThuoc = new JScrollPane(tblThuoc);
 
         // Cập nhật các cột cho bảng thuốc đã chọn để bao gồm thông tin lô
-        String[] columnNamesThuocDaChon = {"Mã thuốc", "Tên thuốc", "Mã lô", "NSX", "HSD", "Số lượng", "Đơn giá nhập", "Đơn vị tính", "Thành tiền"};
+        String[] columnNamesThuocDaChon = {"Mã thuốc", "Tên thuốc", "NSX", "HSD", "Số lượng", "Đơn giá nhập", "Đơn vị tính", "Thành tiền"};
         tbmThuocDaChon = new DefaultTableModel(columnNamesThuocDaChon, 0);
 
         tblThuocDaChon = new JTable(tbmThuocDaChon);
@@ -343,6 +343,33 @@ public class Form_PhieuNhapThuoc extends JPanel implements ActionListener {
         btnThemVaoPhieu.addActionListener(this);
         txtSoLuong.addActionListener(this);
         txtDonGia.addActionListener(this);
+
+        updateTableThuoc();
+
+
+    }
+
+    private void updateTableThuoc()  {
+        // Xóa dữ liệu cũ trong bảng thuốc
+        tbmThuoc.setRowCount(0);
+        try {
+            ThuocService thuocService = (ThuocService) Naming.lookup("rmi://localhost:9090/thuocService");
+            dsThuoc = thuocService.getAll();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Lỗi kết nối đến dịch vụ thuốc: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+        // Thêm dữ liệu mới vào bảng thuốc
+        for (Thuoc thuoc : dsThuoc) {
+            Object[] rowData = {
+                    thuoc.getMaThuoc(),
+                    thuoc.getTenThuoc(),
+                    thuoc.getGiaBan(),
+                    thuoc.getGiaNhap(),
+                    thuoc.getSoLuong(),
+                    thuoc.getDonViTinh()
+            };
+            tbmThuoc.addRow(rowData);
+        }
     }
 
     // Phương thức lấy ngày hiện tại theo định dạng dd/MM/yyyy
@@ -395,7 +422,6 @@ public class Form_PhieuNhapThuoc extends JPanel implements ActionListener {
             String donVi = tblThuocDaChon.getValueAt(row, 7).toString();
 
             txtTenThuoc.setText(tenThuoc);
-            txtMaLo.setText(maLo);
             txtSoLuong.setText(soLuong);
             txtDonVi.setText(donVi);
             txtDonGia.setText(donGia);
@@ -433,7 +459,6 @@ public class Form_PhieuNhapThuoc extends JPanel implements ActionListener {
             // Tạo mã lô mặc định theo ngày và mã thuốc
             SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
             String ngayHienTai = sdf.format(new Date());
-            txtMaLo.setText("LO-" + ngayHienTai + "-" + maThuoc);
 
             updateThanhTien();
         }
@@ -441,7 +466,7 @@ public class Form_PhieuNhapThuoc extends JPanel implements ActionListener {
 
     private void themThuocVaoPhieu() {
         // Kiểm tra và thêm thuốc vào phiếu nhập
-        if (txtTenThuoc.getText().isEmpty() || txtMaLo.getText().isEmpty() ||
+        if (txtTenThuoc.getText().isEmpty() ||
                 txtSoLuong.getText().isEmpty() || txtDonGia.getText().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Vui lòng điền đầy đủ thông tin thuốc và lô");
             return;
@@ -456,7 +481,6 @@ public class Form_PhieuNhapThuoc extends JPanel implements ActionListener {
 
         String maThuoc = tblThuoc.getValueAt(selectedRow, 0).toString();
         String tenThuoc = txtTenThuoc.getText();
-        String maLo = txtMaLo.getText();
 
         // Định dạng ngày để hiển thị
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
@@ -470,7 +494,7 @@ public class Form_PhieuNhapThuoc extends JPanel implements ActionListener {
 
         // Thêm vào bảng thuốc đã chọn
         tbmThuocDaChon.addRow(new Object[]{
-                maThuoc, tenThuoc, maLo, ngaySX, hanSD, soLuong, donGia, donVi, thanhTien
+                maThuoc, tenThuoc, ngaySX, hanSD, soLuong, donGia, donVi, thanhTien
         });
 
         // Cập nhật tổng tiền phiếu nhập
@@ -478,7 +502,6 @@ public class Form_PhieuNhapThuoc extends JPanel implements ActionListener {
 
         // Xóa thông tin trong form để nhập thuốc mới
         txtTenThuoc.setText("");
-        txtMaLo.setText("");
         txtSoLuong.setText("");
         txtDonVi.setText("");
         txtDonGia.setText("");
@@ -510,7 +533,6 @@ public class Form_PhieuNhapThuoc extends JPanel implements ActionListener {
         // Xóa tất cả các trường trong form
         txtMaPNT.setText("");
         txtTenThuoc.setText("");
-        txtMaLo.setText("");
         txtSoLuong.setText("");
         txtDonVi.setText("");
         txtDonGia.setText("");
