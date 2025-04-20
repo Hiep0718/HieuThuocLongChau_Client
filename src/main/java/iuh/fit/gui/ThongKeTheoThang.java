@@ -5,11 +5,17 @@ import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.category.DefaultCategoryDataset;
+import services.ThongKeDoanhThuService;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.net.MalformedURLException;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 public class ThongKeTheoThang extends JPanel {
 
@@ -47,8 +53,14 @@ public class ThongKeTheoThang extends JPanel {
 			} catch (SQLException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
-			}
-		});
+			} catch (MalformedURLException ex) {
+                throw new RuntimeException(ex);
+            } catch (NotBoundException ex) {
+                throw new RuntimeException(ex);
+            } catch (RemoteException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
 
         // Add components to the frame
         add(searchPanel, BorderLayout.SOUTH);
@@ -74,7 +86,25 @@ public class ThongKeTheoThang extends JPanel {
                 true, true, false);
     }
 
-    private void filterData() throws SQLException {
+    private void filterData() throws SQLException, RemoteException, MalformedURLException, NotBoundException {
+        int selectYear= (int) yearComboBox.getSelectedItem();
+        String selectedYearStr = String.valueOf(selectYear);
+        double DT;
+        double CP;
+        double LN;
+        int i=1;
+        ThongKeDoanhThuService tkdoanhThuSv= (ThongKeDoanhThuService) Naming.lookup("rmi://localhost:9090/thongKeDoanhThuService");
+        ArrayList<Double> list=tkdoanhThuSv.TongDoanhThuTheothang(selectedYearStr);
+        for(double s : list){
+            DT=s;
+            CP=s*0.8;
+            LN=DT-CP;
+            model.addRow(new Object[]{i, DT, CP, LN});
+            dataset.addValue(DT, "Doanh thu", i+"");
+            dataset.addValue(CP, "Chi phí", i+"");
+            dataset.addValue(LN, "Lợi nhuận", i+"");
+            i++;
+        }
 
 
  
