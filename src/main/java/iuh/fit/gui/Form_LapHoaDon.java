@@ -400,6 +400,36 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
         }
     }
 
+    // Cập nhật khách hàng
+    // Khi bạn muốn thêm số điện thoại mới vào danh sách gợi ý
+    public void updatePhoneList() {
+        try {
+            // Lấy danh sách hiện tại
+            List<String> currentPhoneList = cmbSDT.getItems();
+
+            // Lấy danh sách mới từ service
+            KhachHangService khachHangService = (KhachHangService) Naming.lookup("rmi://localhost:9090/khachHangService");
+            List<KhachHang> dsKH = khachHangService.getAll();
+
+            // Thêm các số điện thoại mới vào danh sách hiện tại
+            dsKH.forEach(khachHang -> {
+                String phone = khachHang.getSoDienThoai();
+                if (!currentPhoneList.contains(phone)) {
+                    currentPhoneList.add(phone);
+                }
+            });
+
+            // Hoặc nếu bạn muốn thêm số điện thoại cụ thể:
+            // currentPhoneList.add("0123456789");
+
+            // Cập nhật danh sách vào control
+            cmbSDT.setItems(currentPhoneList);
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Lỗi cập nhật danh sách số điện thoại: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
     // Phương thức lấy ngày hiện tại theo định dạng dd/MM/yyyy
     private String getCurrentDate() {
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
@@ -424,11 +454,6 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
 
         textField.setFont(new Font("Open Sans", Font.PLAIN, 14));  // Phông chữ hiện đại
     }
-    private void updateKH() {
-		// TODO Auto-generated method stub
-
-
-	}
     private void updatePDT() {
 
 	}
@@ -622,7 +647,7 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
                 @Override
                 public void windowClosed(java.awt.event.WindowEvent windowEvent) {
                     // Gọi updateKH() sau khi cửa sổ đóng
-                    updateKH();
+                    updatePhoneList();
                 }
             });
 

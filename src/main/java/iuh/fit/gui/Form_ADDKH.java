@@ -1,10 +1,14 @@
 package iuh.fit.gui;
 
+import model.KhachHang;
+import services.KhachHangService;
+
 import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.rmi.Naming;
 
 public class Form_ADDKH extends JFrame implements ActionListener {
     private JLabel tenKH;
@@ -166,12 +170,43 @@ public class Form_ADDKH extends JFrame implements ActionListener {
             dispose();
         } else if (e.getSource() == buttonLuu) {
             // Xử lý lưu thông tin khách hàng
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Đã thêm khách hàng thành công!",
-                    "Thông báo",
-                    JOptionPane.INFORMATION_MESSAGE
-            );
+            try {
+                KhachHangService khachHangService = (KhachHangService) Naming.lookup("rmi://localhost:9090/khachHangService");
+                String tenKH = txtTenKH.getText().trim();
+                String sdt = txtSDT.getText().trim();
+                String email = txtEmail.getText().trim();
+                if (tenKH.isEmpty() || sdt.isEmpty() || email.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ thông tin!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+                    return;
+                };
+                if (!sdt.matches("\\d{10}")) {
+                    JOptionPane.showMessageDialog(this, "Số điện thoại không hợp lệ!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                if (!email.matches("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$")) {
+                    JOptionPane.showMessageDialog(this, "Email không hợp lệ!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                KhachHang khachHang = new KhachHang();
+                khachHang.setTenKH(tenKH);
+                khachHang.setSoDienThoai(sdt);
+                khachHang.setEmail(email);
+                if (!khachHangService.save(khachHang)) {
+                    JOptionPane.showMessageDialog(this, "Thêm khách hàng thất bại!", "Thông báo", JOptionPane.ERROR_MESSAGE);
+                    dispose();
+                }else {
+                    JOptionPane.showMessageDialog(
+                            this,
+                            "Đã thêm khách hàng thành công!",
+                            "Thông báo",
+                            JOptionPane.INFORMATION_MESSAGE
+                    );
+                    dispose();
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+
         }
     }
 
