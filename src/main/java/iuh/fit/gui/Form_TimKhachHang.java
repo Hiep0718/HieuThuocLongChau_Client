@@ -1,10 +1,17 @@
 package iuh.fit.gui;
 
+import model.KhachHang;
+import model.Thuoc;
+import services.KhachHangService;
+import services.ThuocService;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.rmi.Naming;
+import java.util.List;
 
 public class Form_TimKhachHang extends JPanel {
     // Khai báo các thành phần của form
@@ -14,6 +21,7 @@ public class Form_TimKhachHang extends JPanel {
     private JTable tblKetQua;
     private JScrollPane scrollPane;
 	private DefaultTableModel data;
+    private List<KhachHang> dsKH;
 
     public Form_TimKhachHang() {
 
@@ -25,8 +33,9 @@ public class Form_TimKhachHang extends JPanel {
         btnThoat = new JButton("Thoát");
         
         // Dữ liệu mẫu cho bảng kết quả
-        String[] columnNames = {"Mã KH", "Họ Tên", "Số Điện Thoại", "Email", "Trạng thái"};
-        data = new DefaultTableModel(columnNames, 0);      
+        String[] columnNames = {"Mã khách hàng", "Tên khách hàng", "Số Điện Thoại", "Email", "Địa chỉ", "Ngày sinh"};
+        data = new DefaultTableModel(columnNames, 0);
+        updateTableKH();
         tblKetQua = new JTable(data);
 
         scrollPane = new JScrollPane(tblKetQua);
@@ -63,5 +72,28 @@ public class Form_TimKhachHang extends JPanel {
         });
 
 
+    }
+
+    private void updateTableKH()  {
+        // Xóa dữ liệu cũ trong bảng thuốc
+        data.setRowCount(0);
+        try {
+            KhachHangService thuocService = (KhachHangService) Naming.lookup("rmi://localhost:9090/khachHangService");
+            dsKH = thuocService.getAll();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Lỗi kết nối đến dịch vụ thuốc: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+        // Thêm dữ liệu mới vào bảng thuốc
+        for (KhachHang kh : dsKH) {
+            Object[] rowData = {
+                    kh.getMaKH(),
+                    kh.getTenKH(),
+                    kh.getSoDienThoai(),
+                    kh.getEmail(),
+                    kh.getDiaChi(),
+                    kh.getNgaySinh()
+            };
+            data.addRow(rowData);
+        }
     }
 }
