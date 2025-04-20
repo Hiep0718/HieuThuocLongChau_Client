@@ -380,6 +380,7 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
     private void updateTableThuoc()  {
         // Xóa dữ liệu cũ trong bảng thuốc
         tbmThuoc.setRowCount(0);
+        // Lấy danh sách thuốc từ dịch vụ
         try {
             ThuocService thuocService = (ThuocService) Naming.lookup("rmi://localhost:9090/thuocService");
             dsThuoc = thuocService.getAll();
@@ -618,6 +619,7 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
                     txtDonGia.setText("");
                     txtThanhTien.setText("");
                     txtMaHD.setText(String.valueOf(hoaDonService.layMaHoaDonMoiNhat() + 1));
+                    updateTableThuoc();
                     // Xóa dữ liệu trong bảng thuốc đã chọn
                     tbmThuocDaChon.setRowCount(0);
                 }else {
