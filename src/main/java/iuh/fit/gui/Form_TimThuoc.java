@@ -1,10 +1,16 @@
 package iuh.fit.gui;
 
+import model.Thuoc;
+import services.ThuocService;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.rmi.Naming;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Form_TimThuoc extends JPanel{
     // Khai báo các thành phần của form
@@ -14,8 +20,10 @@ public class Form_TimThuoc extends JPanel{
     private JTable tblKetQua;
     private JScrollPane scrollPane;
 	private DefaultTableModel data;
+    private List<Thuoc> dsThuoc;
 
     public Form_TimThuoc() {
+        dsThuoc = new ArrayList<>();
 
         // Tạo các thành phần
         lblTimKiem = new JLabel("Nhập mã hoặc tên thuốc:");
@@ -24,9 +32,9 @@ public class Form_TimThuoc extends JPanel{
         btnThoat = new JButton("Thoát");
         
         // Dữ liệu mẫu cho bảng kết quả
-        String[] columnNames = {"Mã thuốc", "Tên thuốc", "Đơn giá", "Số lượng tồn", "Danh mục", "Lô", "Nhà sản xuất", "Mô tả"};
+        String[] columnNames = {"Mã thuốc", "Tên thuốc", "Số lượng", "Đơn vị tính", "Giá bán", "Giá nhập", "Loại thuốc"};
         data = new DefaultTableModel(columnNames, 0);
-        
+        updateTableThuoc();
         tblKetQua = new JTable(data);
 
         scrollPane = new JScrollPane(tblKetQua);
@@ -60,6 +68,30 @@ public class Form_TimThuoc extends JPanel{
         });
 
 
+    }
+
+    private void updateTableThuoc()  {
+        // Xóa dữ liệu cũ trong bảng thuốc
+        data.setRowCount(0);
+        try {
+            ThuocService thuocService = (ThuocService) Naming.lookup("rmi://localhost:9090/thuocService");
+            dsThuoc = thuocService.getAll();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Lỗi kết nối đến dịch vụ thuốc: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+        // Thêm dữ liệu mới vào bảng thuốc
+        for (Thuoc thuoc : dsThuoc) {
+            Object[] rowData = {
+                    thuoc.getMaThuoc(),
+                    thuoc.getTenThuoc(),
+                    thuoc.getSoLuong(),
+                    thuoc.getDonViTinh(),
+                    thuoc.getGiaBan(),
+                    thuoc.getGiaNhap(),
+                    thuoc.getLoaiThuoc()
+            };
+            data.addRow(rowData);
+        }
     }
 
 
