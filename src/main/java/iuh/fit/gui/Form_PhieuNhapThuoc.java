@@ -1,6 +1,8 @@
 package iuh.fit.gui;
 
+import model.NhaCungCap;
 import model.Thuoc;
+import services.NhaSanXuatService;
 import services.ThuocService;
 
 import javax.swing.*;
@@ -46,6 +48,7 @@ public class Form_PhieuNhapThuoc extends JPanel implements ActionListener {
     private JPanel panelNCC;
     private int flag;
     private List<Thuoc> dsThuoc;
+    private List<NhaCungCap> dsNCC;
 
     public Form_PhieuNhapThuoc() {
         // Cấu hình cửa sổ
@@ -345,8 +348,7 @@ public class Form_PhieuNhapThuoc extends JPanel implements ActionListener {
         txtDonGia.addActionListener(this);
 
         updateTableThuoc();
-
-
+        updateNhaCungCap();
     }
 
     private void updateTableThuoc()  {
@@ -369,6 +371,20 @@ public class Form_PhieuNhapThuoc extends JPanel implements ActionListener {
                     thuoc.getDonViTinh()
             };
             tbmThuoc.addRow(rowData);
+        }
+    }
+
+    private void updateNhaCungCap()  {
+        // Xóa dữ liệu cũ trong bảng thuốc
+        try {
+            NhaSanXuatService thuocService = (NhaSanXuatService) Naming.lookup("rmi://localhost:9090/nhaSanXuatService");
+            dsNCC = thuocService.getAll();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Lỗi kết nối đến dịch vụ nhà cung cấp: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+        // Thêm dữ liệu mới vào bảng thuốc
+        for (NhaCungCap thuoc : dsNCC) {
+            cmbNhaCungCap.addItem(thuoc.getTenNCC());
         }
     }
 
@@ -448,8 +464,8 @@ public class Form_PhieuNhapThuoc extends JPanel implements ActionListener {
         if (row >= 0) {
             String maThuoc = tblThuoc.getValueAt(row, 0).toString();
             String tenThuoc = tblThuoc.getValueAt(row, 1).toString();
-            String donGia = tblThuoc.getValueAt(row, 2).toString();
-            String donVi = tblThuoc.getValueAt(row, 3).toString();
+            String donGia = tblThuoc.getValueAt(row, 3).toString();
+            String donVi = tblThuoc.getValueAt(row, 5).toString();
 
             txtTenThuoc.setText(tenThuoc);
             txtDonVi.setText(donVi);
@@ -475,7 +491,6 @@ public class Form_PhieuNhapThuoc extends JPanel implements ActionListener {
         // Lấy thông tin từ form
         int selectedRow = tblThuoc.getSelectedRow();
         if (selectedRow < 0) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn thuốc từ danh sách");
             return;
         }
 
@@ -549,7 +564,30 @@ public class Form_PhieuNhapThuoc extends JPanel implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-
+        Object o = e.getSource();
+        if (o.equals(btnThemVaoPhieu)) {
+            int selectedRow = tblThuoc.getSelectedRow();
+            if (selectedRow < 0) {
+                JOptionPane.showMessageDialog(this, "Vui lòng chọn thuốc từ danh sách");
+                return;
+            }
+            // Thêm thuốc vào phiếu
+            int maThuoc = Integer.parseInt(tblThuoc.getValueAt(selectedRow, 0).toString());
+            String tenThuoc = tblThuoc.getValueAt(selectedRow, 1).toString();
+            String donVi = tblThuoc.getValueAt(selectedRow, 5).toString();
+            String nsx = modelNgaySX.toString();
+            String hsd = modelHanSD.toString();
+            int soLuong = Integer.parseInt(txtSoLuong.getText());
+            double donGia = Double.parseDouble(txtDonGia.getText());
+            double thanhTien = soLuong * donGia;
+            tbmThuocDaChon.addRow(new Object[]{maThuoc, tenThuoc, nsx, hsd, soLuong, donGia, donVi, thanhTien});
+            // Xóa thông tin trong form để nhập thuốc mới
+            txtTenThuoc.setText("");
+            txtSoLuong.setText("");
+            txtDonVi.setText("");
+            txtDonGia.setText("");
+            tblThuoc.clearSelection();
+        }
     }
 }
 
