@@ -9,10 +9,16 @@ import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.category.DefaultCategoryDataset;
+import services.ThongKeDoanhThuService;
+import services.impl.ThongKeDoanhThuServiceImpl;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.net.MalformedURLException;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -70,15 +76,40 @@ public class ThongKeTheoNgay extends JPanel {
                 datePicker.getJFormattedTextField().setText(formattedDate);
             }
         });
-        
-        
-        
+
+
         searchPanel.add(new JLabel("Ngày:"));
         searchPanel.add(datePicker);
         
         searchPanel.add(searchButton);
 
+        searchButton.addActionListener(e ->{
+                    Date selectDate=(Date) datePicker.getModel().getValue();
+                    Date selectDate1=(Date) datePicker.getModel().getValue();
+                    if(selectDate != null &&selectDate1 != null ) {
+                        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                        String formattedDate = dateFormat.format(selectDate);
+                        System.out.println("Ngày được chọn: " + formattedDate);
 
+                        try {
+
+                            updattechart(formattedDate);
+                        } catch (SQLException e1) {
+                            // TODO Auto-generated catch block
+                            e1.printStackTrace();
+                        } catch (MalformedURLException ex) {
+                            throw new RuntimeException(ex);
+                        } catch (NotBoundException ex) {
+                            throw new RuntimeException(ex);
+                        } catch (RemoteException ex) {
+                            throw new RuntimeException(ex);
+                        }
+
+
+                    }
+
+                }
+        );
         // Add components to the frame
         add(searchPanel, BorderLayout.SOUTH);
         add(new JScrollPane(table), BorderLayout.CENTER);
@@ -96,9 +127,22 @@ public class ThongKeTheoNgay extends JPanel {
     }
     
 
-    private void updattechart(String formattedDate) throws SQLException {
-		
-	}
+    private void updattechart(String formattedDate) throws SQLException, MalformedURLException, NotBoundException, RemoteException {
+        model.setRowCount(0);
+        dataset.clear();
+        ThongKeDoanhThuService tkdoanhThuSv= (ThongKeDoanhThuService)Naming.lookup("rmi://localhost:9090/thongKeDoanhThuService");
+        Double dt=tkdoanhThuSv.TongDoanhThuTheoNgay(formattedDate);
+        Double chiPhi=dt*0.8;
+        Double loiNhuan=dt-chiPhi;
+
+
+        dataset.addValue(dt, "Doanh thu",formattedDate);
+        dataset.addValue(chiPhi, "Chi phí",formattedDate);
+        dataset.addValue(loiNhuan, "Lợi nhuận",formattedDate);
+        String [] rowdata= {formattedDate,dt+" VND",chiPhi+" VND",loiNhuan+" VND"};
+        model.addRow(rowdata);
+
+    }
 
     private JFreeChart createChart(DefaultCategoryDataset dataset) {
         return ChartFactory.createBarChart(
