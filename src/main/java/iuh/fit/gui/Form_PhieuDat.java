@@ -2,10 +2,8 @@ package iuh.fit.gui;
 
 
 import com.formdev.flatlaf.extras.FlatSVGIcon;
-import model.KhachHang;
-import model.Thuoc;
-import services.KhachHangService;
-import services.ThuocService;
+import model.*;
+import services.*;
 
 import javax.swing.*;
 import javax.swing.border.LineBorder;
@@ -16,7 +14,12 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.rmi.Naming;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 
@@ -82,7 +85,8 @@ public class Form_PhieuDat extends JPanel implements MouseListener,ActionListene
 	private JTable tableGioHang;
 	private List<Thuoc> dsThuoc;
 	private AutoSuggestTextField cmbSDT;
-	
+	private KhachHang khachhang;
+
 	public  Form_PhieuDat(){
 		initComBoNent();
 	}
@@ -409,6 +413,7 @@ public class Form_PhieuDat extends JPanel implements MouseListener,ActionListene
 				   KhachHang customer = khachHangService.timBangSDT(phoneNumber);
 				   if (customer != null) {
 					   txtTenKH.setText(customer.getTenKH());
+					   khachhang = customer;
 				   } else {
 					   txtTenKH.setText("Customer not found");
 				   }
@@ -546,6 +551,10 @@ public class Form_PhieuDat extends JPanel implements MouseListener,ActionListene
 		txtSoLuong.setText("1");
 		
 	}
+	private String getCurrentDate() {
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+		return sdf.format(new Date());
+	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		// TODO Auto-generated method stub
@@ -585,9 +594,48 @@ public class Form_PhieuDat extends JPanel implements MouseListener,ActionListene
 				if(o.equals(btnAdd)) {
 				}
 				if(o.equals(buttonLuu)) {
+					try {
+					String ngaykhoitao= getCurrentDate();
+						PhieuDatThuocService phieuDatThuocService = (PhieuDatThuocService) Naming.lookup("rmi://localhost:9090/phieuDatThuocService");
+						KhachHangService khachHangService = (KhachHangService) Naming.lookup("rmi://localhost:9090/khachHangService");
+						ThuocService thuocService = (ThuocService) Naming.lookup("rmi://localhost:9090/thuocService");
+						if (tableGioHang.getRowCount() == 0) {
+							JOptionPane.showMessageDialog(this, "Vui lòng chọn thuốc trước khi lưu hóa đơn!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+							return;
+						}
+
+						DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+						LocalDate date = LocalDate.parse(ngaykhoitao, formatter);
+						LocalDateTime dateTime = date.atStartOfDay(); // tạo LocalDateTime với giờ 00:00
+						NhanVien nhanVien = Form_DangNhap.nhanVien;
+						KhachHang kh = khachhang;
+
+						PhieuDatThuoc Pdthuoc = new PhieuDatThuoc(nhanVien, kh, dateTime, "");
+						List<ChiTietPhieuDatThuoc> danhSachChiTiet = new ArrayList<>();
+						for (int i = 0; i < tableGioHang.getRowCount(); i++) {
+							Integer maThuoc = Integer.parseInt(tableGioHang.getValueAt(i, 0).toString());
+							Integer soLuong = Integer.parseInt(tableGioHang.getValueAt(i, 2).toString());
+							Double donGia = Double.parseDouble(tableGioHang.getValueAt(i, 3).toString());
+							String donViTinh = tableThongTinThuoc.getValueAt(maThuoc, 3).toString();
+							Thuoc thuoc = thuocService.findById(maThuoc);
+							ChiTietPhieuDatThuoc chiTietPhieuDat = new ChiTietPhieuDatThuoc( Pdthuoc,thuoc, soLuong , donGia, donViTinh);
+							danhSachChiTiet.add(chiTietPhieuDat);
+						}
+						if (phieuDatThuocService.themPhieuDatThuoc(nhanVien.getMaNV(),khachhang.getMaKH(),"",danhSachChiTiet) ){
+							JOptionPane.showMessageDialog(this, "Lưu hóa đơn thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+							xoaTrang();
+							// Xóa dữ liệu trong bảng thuốc đã chọn
+							modelGioHang.setRowCount(0);
+						}else {
+							JOptionPane.showMessageDialog(this, "Lưu hóa đơn thất bại!", "Thông báo", JOptionPane.ERROR_MESSAGE);
+						}
+					} catch (Exception ex) {
+						JOptionPane.showMessageDialog(this, "Lỗi lưu hóa đơn: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+					}
+				}
 				    
 					
-				}
+
 				if(o.equals(buttonHuyBo)) {
 					
 				}
