@@ -582,6 +582,33 @@ public class Form_DoiTra extends JPanel implements ActionListener{
 
         if(o.equals(btnTra)) {
 
+            try {
+                HoaDonService hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:9090/hoaDonService");
+
+                int maHD = Integer.parseInt(jtexMaHD.getText().trim());
+                boolean success = hoaDonService.capNhatTrangThaiHoaDon(maHD, "Đã trả hàng");
+
+                if (success) {
+                    double tongTienHoan = 0.0;
+
+                    for (int i = 0; i < table1.getRowCount(); i++) {
+                        int soLuong = Integer.parseInt(table1.getValueAt(i, 3).toString());
+                        double donGia = Double.parseDouble(table1.getValueAt(i, 4).toString());
+                        tongTienHoan += soLuong * donGia;
+                    }
+
+                    DecimalFormat formatter = new DecimalFormat("#,###.##");
+                    JOptionPane.showMessageDialog(null, "Hóa đơn đã được cập nhật trạng thái: Đã trả hàng.\nTiền hoàn lại cho khách: " + formatter.format(tongTienHoan) + " VND", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+
+                    txtTienThu.setText("0");
+                    txtTienTra.setText(formatter.format(tongTienHoan));
+                } else {
+                    JOptionPane.showMessageDialog(null, "Cập nhật trạng thái hóa đơn thất bại.", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+
 
         }
 
