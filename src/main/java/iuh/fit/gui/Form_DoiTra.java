@@ -1,10 +1,8 @@
 package iuh.fit.gui;
 
 
-import model.ChiTietHoaDon;
-import model.Thuoc;
-import services.HoaDonService;
-import services.ThuocService;
+import model.*;
+import services.*;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -15,7 +13,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.rmi.Naming;
+import java.text.DecimalFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,12 +39,15 @@ public class Form_DoiTra extends JPanel implements ActionListener{
     private final JTextField txtTienThu;
     private final JTable table3;
     int x = 0;
+    int maKH=0;
     private int selectable = -1;
     private boolean isDoi = true;
     private final JTextField jtexSoLuong;
     private final JButton btnTimKiem;
     private final JTextField jtexTimKiem;
     private List<Thuoc> dsThuoc;
+    private JLabel lblNgayDoi;
+    private JLabel lblNgayDoiValue;
 
     public Form_DoiTra(){
         setLayout(new BorderLayout());
@@ -71,8 +74,8 @@ public class Form_DoiTra extends JPanel implements ActionListener{
         thongTinDT.add(jtexMaHD);
 
 
-        JLabel lblNgayDoi = new JLabel("Ngày đổi sản phẩm:");
-        JLabel lblNgayDoiValue = new JLabel(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+        lblNgayDoi = new JLabel("Ngày đổi sản phẩm:");
+        lblNgayDoiValue = new JLabel(LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
         thongTinDT.add(lblNgayDoi);
         thongTinDT.add(lblNgayDoiValue);
 
@@ -156,7 +159,7 @@ public class Form_DoiTra extends JPanel implements ActionListener{
 
 
         // tạo table 1
-        String[] columnNames1 = {"Mã hóa đơn","Tên thuốc", "Số lượng", "Đơn giá", "Đơn vị"};
+        String[] columnNames1 = {"Mã hóa đơn","Mã thuốc","Tên thuốc", "Số lượng", "Đơn giá", "Đơn vị"};
         data1 = new DefaultTableModel(columnNames1, 0);
         table1 = new JTable(data1);
         JScrollPane scrollPane1 = new JScrollPane(table1);
@@ -268,7 +271,7 @@ public class Form_DoiTra extends JPanel implements ActionListener{
                 selectable = 0;
                 int selectedRow = table1.getSelectedRow();
                 if (selectedRow != -1) {
-                    String soLuong = table1.getValueAt(selectedRow, 2).toString();
+                    String soLuong = table1.getValueAt(selectedRow, 3).toString();
                     jtexSoLuong.setText(soLuong); // Hiển thị số lượng từ bảng 1
                 }
             }
@@ -338,19 +341,24 @@ public class Form_DoiTra extends JPanel implements ActionListener{
             table2.setValueAt(soLuong - soLuongNhap, selectedRow2, 4);
             jtexSoLuong.setText("");
 
-            // Thêm vào bảng 1
-            DefaultTableModel model1 = (DefaultTableModel) table1.getModel();
-            Object[] rowData1 = {null, tenThuoc, soLuongNhap, giaBan, donViTinh};
-            model1.addRow(rowData1);
 
-            // Cập nhật lại số lượng cho mã thuốc trong bảng 1 nếu có
-            for (int i = 0; i < model1.getRowCount(); i++) {
-                String maThuocTable1 = model1.getValueAt(i, 1).toString();
+            boolean isExist = false;
+
+            for (int i = 0; i < table1.getRowCount(); i++) {
+                String maThuocTable1 = table1.getValueAt(i, 1).toString();
                 if (maThuoc.equals(maThuocTable1)) {
-                    int currentSoLuong = Integer.parseInt(model1.getValueAt(i, 2).toString());
-                    model1.setValueAt(currentSoLuong + soLuongNhap, i, 2);
+                    // Nếu mã thuốc đã có trong bảng 1, chỉ cập nhật lại số lượng
+                    int currentSoLuong = Integer.parseInt(table1.getValueAt(i, 3).toString());
+                    table1.setValueAt(currentSoLuong + soLuongNhap, i, 3);  // Cập nhật số lượng
+                    isExist = true; // Đánh dấu là đã có
                     break;
                 }
+            }
+
+// Nếu sản phẩm chưa có trong bảng 1, thì thêm mới
+            if (!isExist) {
+                Object[] rowData1 = {null, maThuoc, tenThuoc, soLuongNhap, giaBan, donViTinh};
+                data1.addRow(rowData1);
             }
 
         } catch (NumberFormatException ex) {
@@ -380,8 +388,8 @@ public class Form_DoiTra extends JPanel implements ActionListener{
 
         try {
             String maThuoc = table1.getValueAt(selectedRow1, 1).toString();
-            String tenThuoc = table1.getValueAt(selectedRow1, 1).toString();
-            int currentSoLuong = Integer.parseInt(table1.getValueAt(selectedRow1, 2).toString());
+            String tenThuoc = table1.getValueAt(selectedRow1, 2).toString();
+            int currentSoLuong = Integer.parseInt(table1.getValueAt(selectedRow1, 3).toString());
             int newSoLuong = Integer.parseInt(jtexSoLuong.getText().trim());
 
             if (newSoLuong > currentSoLuong || newSoLuong <= 0) {
@@ -389,13 +397,14 @@ public class Form_DoiTra extends JPanel implements ActionListener{
                 return;
             }
 
+
             // Tạo dòng dữ liệu để thêm vào table3
             Object[] rowData = {
-                    table1.getValueAt(selectedRow1, 1), // mã thuốc
+                    maThuoc, // mã thuốc
                     tenThuoc, // tên thuốc
                     newSoLuong,
-                    table1.getValueAt(selectedRow1, 3), // đơn giá
-                    table1.getValueAt(selectedRow1, 4)  // đơn vị tính
+                    table1.getValueAt(selectedRow1, 4), // đơn giá
+                    table1.getValueAt(selectedRow1, 5)  // đơn vị tính
             };
 
             // Cập nhật lại số lượng trong table1
@@ -403,7 +412,7 @@ public class Form_DoiTra extends JPanel implements ActionListener{
             if (remainingSoLuong == 0) {
                 ((DefaultTableModel) table1.getModel()).removeRow(selectedRow1);
             } else {
-                table1.setValueAt(remainingSoLuong, selectedRow1, 2);
+                table1.setValueAt(remainingSoLuong, selectedRow1, 3);
             }
 
             // Thêm vào table3 nếu là đổi hoặc trả
@@ -473,6 +482,101 @@ public class Form_DoiTra extends JPanel implements ActionListener{
         }
 
         if(o.equals(btnDoi)) {
+            try {
+
+                txtTienThu.setText("0");
+                txtTienTra.setText("0");
+                HoaDonService hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:9090/hoaDonService");
+                KhachHangService khachHangService = (KhachHangService) Naming.lookup("rmi://localhost:9090/khachHangService");
+                ThuocService thuocService = (ThuocService) Naming.lookup("rmi://localhost:9090/thuocService");
+                int maNV = Integer.parseInt(jtextenNV.getText().trim());
+                String trangThai = "";
+                NhanVien nv = Form_DangNhap.nhanVien;
+                KhachHang khachHang = khachHangService.get(maKH);
+
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                LocalDate date = LocalDate.parse(lblNgayDoiValue.getText(), formatter);
+                LocalDateTime dateTime = date.atStartOfDay(); // tạo LocalDateTime với giờ 00:00
+
+                double tongTienThu = 0;
+                double tongTienTra = 0;
+
+                // 1. Duyệt table1 - thuốc TRẢ
+                System.out.println("1");
+                int rowCountTra = table1.getRowCount();
+                for (int i = 0; i < rowCountTra; i++) {
+                    Object maHDValue = table1.getValueAt(i, 0);
+
+                    // Nếu maHD là null, coi như không có mã hóa đơn
+                    if (maHDValue == null || maHDValue.toString().trim().isEmpty()) {
+                        // Nếu không có mã hóa đơn, tính tiền
+                        int soLuong = Integer.parseInt(table1.getValueAt(i, 3).toString());
+                        double donGia = Double.parseDouble(table1.getValueAt(i, 4).toString());
+                        tongTienThu += soLuong * donGia;
+                    }
+
+                }
+                System.out.println("tiền thu:"+ tongTienThu);
+
+                // 2. Duyệt table3 - thuốc ĐỔI
+                int rowCountDoi = table3.getRowCount();
+                for (int i = 0; i < rowCountDoi; i++) {
+                    int soLuong = Integer.parseInt(table3.getValueAt(i, 2).toString());
+                    double donGia = Double.parseDouble(table3.getValueAt(i, 3).toString());
+                    tongTienTra += soLuong * donGia;
+                }
+
+                System.out.println("tiền trả: " + tongTienTra);
+                double tienChenhLech = tongTienThu - tongTienTra;
+                System.out.println("chenh lech:" + tienChenhLech);
+                DecimalFormat formatterTien = new DecimalFormat("#,###");
+
+                if (tienChenhLech > 0) {
+                    txtTienThu.setText(formatterTien.format(Math.abs(tienChenhLech)));
+                    txtTienTra.setText("0");
+                    JOptionPane.showMessageDialog(this, "Khách cần thanh toán thêm: " + formatterTien.format(tienChenhLech), "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                } else if (tienChenhLech < 0) {
+                    txtTienTra.setText(formatterTien.format(Math.abs(tienChenhLech)));
+                    txtTienThu.setText("0");
+                    JOptionPane.showMessageDialog(this, "Khách được hoàn lại: " + formatterTien.format(Math.abs(tienChenhLech)), "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(this, "Không cần thanh toán thêm hoặc hoàn tiền.", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                }
+
+
+                int rowCount = table1.getRowCount();
+                HoaDon hd = new HoaDon(nv, khachHang, dateTime, trangThai);
+                List<ChiTietHoaDon> danhSachChiTiet = new ArrayList<>();
+
+                for (int i = 0; i < rowCount; i++) {
+                    int maThuoc = Integer.parseInt(table1.getValueAt(i, 1).toString());
+                    String tenThuoc = table1.getValueAt(i, 2).toString();
+                    int soLuong = Integer.parseInt(table1.getValueAt(i, 3).toString());
+                    double donGia = Double.parseDouble(table1.getValueAt(i, 4).toString());
+                    String donViTinh = table1.getValueAt(i, 5).toString();
+
+                    Thuoc thuoc = thuocService.findById(maThuoc);
+                    ChiTietHoaDon chiTietHoaDon = new ChiTietHoaDon( thuoc, hd, soLuong , donGia, donViTinh);
+                    danhSachChiTiet.add(chiTietHoaDon);
+
+                }if (hoaDonService.luuHoaDon(hd, danhSachChiTiet)){
+                    JOptionPane.showMessageDialog(this, "Lưu hóa đơn thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                    jtexMaHD.setText("");
+                    jtexSoLuong.setText("");
+                    jtexTimKiem.setText("");
+                    jtexMaHD.setText(String.valueOf(hoaDonService.layMaHoaDonMoiNhat() + 1));
+                    // Xóa dữ liệu trong bảng thuốc đã chọn
+                    data1.setRowCount(0);
+                }else {
+                    JOptionPane.showMessageDialog(this, "Lưu hóa đơn thất bại!", "Thông báo", JOptionPane.ERROR_MESSAGE);
+                }
+
+
+
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+
 
         }
 
@@ -525,8 +629,11 @@ public class Form_DoiTra extends JPanel implements ActionListener{
 
     private void layCTHD() {
         data1.setRowCount(0); // Xóa dữ liệu cũ trong table1
+        data3.setRowCount(0);
 
         String maHD = jtexMaHD.getText().trim();
+        int maNV=0;
+
         if (maHD.isEmpty()) {
             showMessage("Vui lòng nhập mã hóa đơn!", JOptionPane.WARNING_MESSAGE);
             return;
@@ -535,14 +642,16 @@ public class Form_DoiTra extends JPanel implements ActionListener{
         try {
             HoaDonService hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:9090/hoaDonService");
             List<ChiTietHoaDon> chiTietList = hoaDonService.layCTHDTheoMaHD(maHD);
-
             if (chiTietList.isEmpty()) {
                 showMessage("Không tìm thấy chi tiết hóa đơn cho mã: " + maHD, JOptionPane.INFORMATION_MESSAGE);
                 return;
             }
 
             for (ChiTietHoaDon ct : chiTietList) {
+                maNV = ct.getHoaDon().getNhanVien().getMaNV();
+                maKH = ct.getHoaDon().getKhachHang().getMaKH();
                 Object[] row = {
+                        ct.getHoaDon().getMaHD(),
                         ct.getThuoc().getMaThuoc(),
                         ct.getThuoc().getTenThuoc(),
                         ct.getSoLuong(),
@@ -551,6 +660,8 @@ public class Form_DoiTra extends JPanel implements ActionListener{
                 };
                 data1.addRow(row);
             }
+
+            jtextenNV.setText(String.valueOf(maNV));
 
         } catch (Exception ex) {
             ex.printStackTrace();
