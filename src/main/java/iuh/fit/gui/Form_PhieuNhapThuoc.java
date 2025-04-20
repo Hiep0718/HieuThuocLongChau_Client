@@ -426,36 +426,7 @@ public class Form_PhieuNhapThuoc extends JPanel implements ActionListener {
 
     private void handleTblThuocDaChonSelection() {
         // Xử lý khi chọn thuốc trong bảng thuốc đã chọn
-        int row = tblThuocDaChon.getSelectedRow();
-        if (row >= 0) {
-            String maThuoc = tblThuocDaChon.getValueAt(row, 0).toString();
-            String tenThuoc = tblThuocDaChon.getValueAt(row, 1).toString();
-            String maLo = tblThuocDaChon.getValueAt(row, 2).toString();
-            String ngaySX = tblThuocDaChon.getValueAt(row, 3).toString();
-            String hanSD = tblThuocDaChon.getValueAt(row, 4).toString();
-            String soLuong = tblThuocDaChon.getValueAt(row, 5).toString();
-            String donGia = tblThuocDaChon.getValueAt(row, 6).toString();
-            String donVi = tblThuocDaChon.getValueAt(row, 7).toString();
 
-            txtTenThuoc.setText(tenThuoc);
-            txtSoLuong.setText(soLuong);
-            txtDonVi.setText(donVi);
-            txtDonGia.setText(donGia);
-
-            // Cập nhật date spinners (cần chuyển đổi string thành date)
-            try {
-                SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-                Date ngaySanXuat = sdf.parse(ngaySX);
-                Date hanSuDung = sdf.parse(hanSD);
-
-                modelNgaySX.setValue(ngaySanXuat);
-                modelHanSD.setValue(hanSuDung);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            updateThanhTien();
-        }
     }
 
     private void handleTblThuocSelection() {
@@ -568,7 +539,6 @@ public class Form_PhieuNhapThuoc extends JPanel implements ActionListener {
         if (o.equals(btnThemVaoPhieu)) {
             int selectedRow = tblThuoc.getSelectedRow();
             if (selectedRow < 0) {
-                JOptionPane.showMessageDialog(this, "Vui lòng chọn thuốc từ danh sách");
                 return;
             }
             // Thêm thuốc vào phiếu
@@ -587,6 +557,12 @@ public class Form_PhieuNhapThuoc extends JPanel implements ActionListener {
             txtDonVi.setText("");
             txtDonGia.setText("");
             tblThuoc.clearSelection();
+        }
+        if (o.equals(btnTaoMoiPNT)){
+            // Tạo mới phiếu nhập thuốc
+            clearForm();
+            updateTableThuoc();
+            updateNhaCungCap();
         }
     }
 }

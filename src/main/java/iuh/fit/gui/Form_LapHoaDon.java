@@ -598,7 +598,7 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
                 LocalDateTime dateTime = date.atStartOfDay(); // tạo LocalDateTime với giờ 00:00
                 NhanVien nhanVien = Form_DangNhap.nhanVien;
                 KhachHang khachHang = khachHangService.timBangSDT(cmbSDT.getText());
-                HoaDon hoaDon = new HoaDon(nhanVien, khachHang, dateTime, "");
+                HoaDon hoaDon = new HoaDon(nhanVien, khachHang, dateTime, "Đã thanh toán");
                 List<ChiTietHoaDon> danhSachChiTiet = new ArrayList<>();
                 for (int i = 0; i < tbmThuocDaChon.getRowCount(); i++) {
                     Integer maThuoc = (Integer) tbmThuocDaChon.getValueAt(i, 0);
