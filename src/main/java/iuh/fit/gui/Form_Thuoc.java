@@ -1,9 +1,15 @@
 package iuh.fit.gui;
 
+import model.Thuoc;
+import services.ThuocService;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.rmi.Naming;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Form_Thuoc extends JPanel {
 
@@ -13,12 +19,14 @@ public class Form_Thuoc extends JPanel {
     private JLabel jl1, jl2, jl3, jl4, jl5, jl6, jl7, jl8;
     private JTextField jtex1, jtex2, jtex3, jtex4, jtex5, jtex6, jtex7, jtex8;
     private JButton btn_Them, btn_Xoa, btn_XoaTrang;
+    private List<Thuoc> dsThuoc;
 
     public Form_Thuoc() {
         form();
     }
 
-    public void form() { 
+    public void form() {
+        dsThuoc = new ArrayList<>();
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
@@ -95,8 +103,9 @@ public class Form_Thuoc extends JPanel {
         tablePanel.setLayout(new BorderLayout());
         tablePanel.setBorder(BorderFactory.createTitledBorder(""));
 
-        Object[] col = { "Mã thuốc", "Tên thuốc", "Đơn giá", "Số lượng tồn", "Danh mục", "Lô thuốc", "Nhà sản xuất", "Mô tả" };
+        Object[] col = {"Mã thuốc", "Tên thuốc", "Số lượng", "Đơn vị tính", "Giá bán", "Giá nhập", "Loại thuốc"};
         table_modal = new DefaultTableModel(col, 0);
+        updateTableThuoc();
         table = new JTable(table_modal);
 
         jcroll = new JScrollPane(table);
@@ -138,5 +147,29 @@ public class Form_Thuoc extends JPanel {
         row.add(label2);
         row.add(textField2);
         return row;
+    }
+
+    private void updateTableThuoc()  {
+        // Xóa dữ liệu cũ trong bảng thuốc
+        table_modal.setRowCount(0);
+        try {
+            ThuocService thuocService = (ThuocService) Naming.lookup("rmi://localhost:9090/thuocService");
+            dsThuoc = thuocService.getAll();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Lỗi kết nối đến dịch vụ thuốc: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+        // Thêm dữ liệu mới vào bảng thuốc
+        for (Thuoc thuoc : dsThuoc) {
+            Object[] rowData = {
+                    thuoc.getMaThuoc(),
+                    thuoc.getTenThuoc(),
+                    thuoc.getSoLuong(),
+                    thuoc.getDonViTinh(),
+                    thuoc.getGiaBan(),
+                    thuoc.getGiaNhap(),
+                    thuoc.getLoaiThuoc()
+            };
+            table_modal.addRow(rowData);
+        }
     }
 }
