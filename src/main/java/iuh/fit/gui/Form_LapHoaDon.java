@@ -2,10 +2,7 @@ package iuh.fit.gui;
 
 import dao.ThuocDAO;
 import model.*;
-import services.HoaDonService;
-import services.KhachHangService;
-import services.TaiKhoanService;
-import services.ThuocService;
+import services.*;
 import services.impl.ThuocServiceImpl;
 
 import javax.swing.*;
@@ -30,6 +27,7 @@ import java.util.List;
 
 
 public class Form_LapHoaDon extends JPanel implements ActionListener{
+    private List<PhieuDatThuoc> listPhieuDatThuoc;
     // Các thành phần khu vực tác vụ
     private JLabel lblMaHD, lblNgayTaoHD, lblNhanVien, lblKhachHang, lblSDT, lblTenThuoc, lblSoLuong, lblDonVi, lblDonGia, lblThanhTien, lblHienThiNgayTao;
     private JTextField txtMaHD, txtNhanVien, txtKhachHang, txtTenThuoc, txtSoLuong, txtDonVi, txtDonGia, txtThanhTien;
@@ -375,6 +373,31 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
         }catch (Exception e){
             JOptionPane.showMessageDialog(this, "Lỗi kết nối đến dịch vụ thuốc: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
+        try{
+            PhieuDatThuocService phieuDatThuocService = (PhieuDatThuocService) Naming.lookup("rmi://localhost:9090/phieuDatThuocService");
+            listPhieuDatThuoc = phieuDatThuocService.getAll();
+            for (PhieuDatThuoc phieuDatThuoc : listPhieuDatThuoc) {
+                cmbPDT.addItem(phieuDatThuoc.getKhachHang().getSoDienThoai());
+            }
+        }catch (Exception e){
+            JOptionPane.showMessageDialog(this, "Lỗi kết nối đến dịch vụ Phieu dat thuoc: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void updatePhieuDatThuoc() {
+        try{
+            for (int i = 0; i < cmbPDT.getItemCount(); i++) {
+                cmbPDT.removeItemAt(i);
+            }
+            // Lấy danh sách hiện tại
+            PhieuDatThuocService phieuDatThuocService = (PhieuDatThuocService) Naming.lookup("rmi://localhost:9090/phieuDatThuocService");
+            listPhieuDatThuoc = phieuDatThuocService.getAll();
+            for (PhieuDatThuoc phieuDatThuoc : listPhieuDatThuoc) {
+                cmbPDT.addItem(phieuDatThuoc.getKhachHang().getSoDienThoai());
+            }
+        }catch (Exception e){
+            JOptionPane.showMessageDialog(this, "Lỗi kết nối đến dịch vụ thuốc: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void updateTableThuoc()  {
@@ -620,6 +643,7 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
                     txtThanhTien.setText("");
                     txtMaHD.setText(String.valueOf(hoaDonService.layMaHoaDonMoiNhat() + 1));
                     updateTableThuoc();
+                    updatePhieuDatThuoc();
                     // Xóa dữ liệu trong bảng thuốc đã chọn
                     tbmThuocDaChon.setRowCount(0);
                 }else {
@@ -639,6 +663,7 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
             txtThanhTien.setText("");
             // Xóa dữ liệu trong bảng thuốc đã chọn
             tbmThuocDaChon.setRowCount(0);
+            updatePhieuDatThuoc();
         }
         if (o.equals(btnThemKH)) {
             // Tạo đối tượng Form_ADDKH
@@ -655,6 +680,38 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
 
             // Hiển thị cửa sổ Form_ADDKH
             addkh.setVisible(true);
+        }
+        if (o.equals(cmbPDT)){
+            try {
+                PhieuDatThuocService phieuDatThuocService = (PhieuDatThuocService) Naming.lookup("rmi://localhost:9090/phieuDatThuocService");
+                // Get the selected item from combo box - make sure it's a phone number
+                String sdt = cmbPDT.getSelectedItem().toString();
+
+                // Use your existing method to find by SDT
+                PhieuDatThuoc phieuDatThuoc = phieuDatThuocService.timTheoSDT(sdt);
+                ChiTietPhieuDatThuocService chiTietPhieuDatThuocService = (ChiTietPhieuDatThuocService) Naming.lookup("rmi://localhost:9090/chiTietPhieuDatThuocService");
+                List<ChiTietPhieuDatThuoc> chiTietPhieuDatThuocs = chiTietPhieuDatThuocService.findByPhieuDatThuoc(phieuDatThuoc.getMaPDT());
+                if (!chiTietPhieuDatThuocs.isEmpty()) {
+                    txtKhachHang.setText(phieuDatThuoc.getKhachHang().getTenKH());
+                    updateThanhTien();
+                    tbmThuocDaChon.setRowCount(0);
+                    for (ChiTietPhieuDatThuoc ct : chiTietPhieuDatThuocs) {
+                        Object[] rowData = {
+                            ct.getThuoc().getMaThuoc(),
+                            ct.getThuoc().getTenThuoc(),
+                            ct.getDonGia(),
+                            ct.getDonViTinh(),
+                            ct.getSoLuong()
+                        };
+                        tbmThuocDaChon.addRow(rowData);
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(this, "Không tìm thấy chi tiết phiếu đặt thuốc!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+                }
+
+            }catch (Exception ex){
+                JOptionPane.showMessageDialog(this, "Lỗi tìm phiếu đặt thuốc: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            }
         }
 	}
 
