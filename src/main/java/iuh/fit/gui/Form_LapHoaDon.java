@@ -386,9 +386,7 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
 
     private void updatePhieuDatThuoc() {
         try{
-            for (int i = 0; i < cmbPDT.getItemCount(); i++) {
-                cmbPDT.removeItemAt(i);
-            }
+            cmbPDT.removeAllItems();
             // Lấy danh sách hiện tại
             PhieuDatThuocService phieuDatThuocService = (PhieuDatThuocService) Naming.lookup("rmi://localhost:9090/phieuDatThuocService");
             listPhieuDatThuoc = phieuDatThuocService.getAll();
@@ -725,33 +723,34 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
         }
         if (o.equals(cmbPDT)){
             try {
-                PhieuDatThuocService phieuDatThuocService = (PhieuDatThuocService) Naming.lookup("rmi://localhost:9090/phieuDatThuocService");
-                // Get the selected item from combo box - make sure it's a phone number
-                String sdt = cmbPDT.getSelectedItem().toString();
+                if (cmbPDT.getItemCount()!=0){
+                    PhieuDatThuocService phieuDatThuocService = (PhieuDatThuocService) Naming.lookup("rmi://localhost:9090/phieuDatThuocService");
+                    // Get the selected item from combo box - make sure it's a phone number
+                    String sdt = cmbPDT.getSelectedItem().toString();
 
-                // Use your existing method to find by SDT
-                PhieuDatThuoc phieuDatThuoc = phieuDatThuocService.timTheoSDT(sdt);
-                ChiTietPhieuDatThuocService chiTietPhieuDatThuocService = (ChiTietPhieuDatThuocService) Naming.lookup("rmi://localhost:9090/chiTietPhieuDatThuocService");
-                List<ChiTietPhieuDatThuoc> chiTietPhieuDatThuocs = chiTietPhieuDatThuocService.findByPhieuDatThuoc(phieuDatThuoc.getMaPDT());
-                if (!chiTietPhieuDatThuocs.isEmpty()) {
-                    txtKhachHang.setText(phieuDatThuoc.getKhachHang().getTenKH());
-                    updateThanhTien();
-                    tbmThuocDaChon.setRowCount(0);
-                    for (ChiTietPhieuDatThuoc ct : chiTietPhieuDatThuocs) {
-                        Object[] rowData = {
-                            ct.getThuoc().getMaThuoc(),
-                            ct.getThuoc().getTenThuoc(),
-                            ct.getDonGia(),
-                            ct.getDonViTinh(),
-                            ct.getSoLuong()
-                        };
-                        tbmThuocDaChon.addRow(rowData);
+                    // Use your existing method to find by SDT
+                    PhieuDatThuoc phieuDatThuoc = phieuDatThuocService.timTheoSDT(sdt);
+                    ChiTietPhieuDatThuocService chiTietPhieuDatThuocService = (ChiTietPhieuDatThuocService) Naming.lookup("rmi://localhost:9090/chiTietPhieuDatThuocService");
+                    List<ChiTietPhieuDatThuoc> chiTietPhieuDatThuocs = chiTietPhieuDatThuocService.findByPhieuDatThuoc(phieuDatThuoc.getMaPDT());
+                    if (!chiTietPhieuDatThuocs.isEmpty()) {
+                        txtKhachHang.setText(phieuDatThuoc.getKhachHang().getTenKH());
+                        updateThanhTien();
+                        tbmThuocDaChon.setRowCount(0);
+                        for (ChiTietPhieuDatThuoc ct : chiTietPhieuDatThuocs) {
+                            Object[] rowData = {
+                                    ct.getThuoc().getMaThuoc(),
+                                    ct.getThuoc().getTenThuoc(),
+                                    ct.getDonGia(),
+                                    ct.getDonViTinh(),
+                                    ct.getSoLuong()
+                            };
+                            tbmThuocDaChon.addRow(rowData);
+                        }
+                        flag = 1;
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Không tìm thấy chi tiết phiếu đặt thuốc!", "Thông báo", JOptionPane.WARNING_MESSAGE);
                     }
-                    flag = 1;
-                } else {
-                    JOptionPane.showMessageDialog(this, "Không tìm thấy chi tiết phiếu đặt thuốc!", "Thông báo", JOptionPane.WARNING_MESSAGE);
                 }
-
             }catch (Exception ex){
                 JOptionPane.showMessageDialog(this, "Lỗi tìm phiếu đặt thuốc: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
