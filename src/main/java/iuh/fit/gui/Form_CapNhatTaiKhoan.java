@@ -1,10 +1,17 @@
 package iuh.fit.gui;
 
+import model.NhanVien;
+import model.TaiKhoan;
+import services.NhanVienService;
+import services.TaiKhoanService;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.rmi.Naming;
+import java.util.List;
 
 public class Form_CapNhatTaiKhoan extends JPanel implements ActionListener {
     private JTextField txtID;
@@ -17,6 +24,7 @@ public class Form_CapNhatTaiKhoan extends JPanel implements ActionListener {
     private JButton btnXoa;
     private JTable table;
     private DefaultTableModel tableModel;
+    private List<TaiKhoan> list;
 
     public Form_CapNhatTaiKhoan() {
         // Giao diện chính
@@ -146,6 +154,7 @@ public class Form_CapNhatTaiKhoan extends JPanel implements ActionListener {
         table = new JTable(tableModel);
         JScrollPane tableScrollPane = new JScrollPane(table);
         table.setPreferredScrollableViewportSize(new Dimension(800, 300));
+        updateTableTK();
 
         // Add components to layout
         JPanel pnlNorth = new JPanel(new BorderLayout());
@@ -162,7 +171,29 @@ public class Form_CapNhatTaiKhoan extends JPanel implements ActionListener {
         btnThem.addActionListener(this);
         btnXoa.addActionListener(this);
     }
+    private void updateTableTK()  {
+        // Xóa dữ liệu cũ trong bảng thuốc
+        tableModel.setRowCount(0);
+        try {
+            TaiKhoanService taiKhoanService = (TaiKhoanService ) Naming.lookup("rmi://localhost:9090/taiKhoanService");
+            list = taiKhoanService.getAll();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Lỗi kết nối đến dịch vụ thuốc: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+        // Thêm dữ liệu mới vào bảng thuốc
+        for (TaiKhoan tk : list) {
+            Object[] rowData = {
+                    tk.getTenTK(),
+                    tk.getMaTK(),
+                    tk.getMatKhau(),
+                    "Hoạt Động"
 
+
+
+            };
+            tableModel.addRow(rowData);
+        }
+    }
     @Override
     public void actionPerformed(ActionEvent e) {
     	Object o = e.getSource();
@@ -187,6 +218,7 @@ public class Form_CapNhatTaiKhoan extends JPanel implements ActionListener {
     }
     
     private void capNhat() {
+
 
     }
     
