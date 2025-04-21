@@ -1,10 +1,16 @@
 package iuh.fit.gui;
 
+import model.NhaCungCap;
+import services.NhaSanXuatService;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.rmi.Naming;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Form_CapNhatNhaSanXuat extends JPanel implements ActionListener {
     private JTextField txtMaNSX;
@@ -17,11 +23,13 @@ public class Form_CapNhatNhaSanXuat extends JPanel implements ActionListener {
     private JButton btnXoa;
     private JTable table;
     private DefaultTableModel tableModel;
+    private List<NhaCungCap> dsNSX;
 
     public Form_CapNhatNhaSanXuat() {
         // Giao diện chính
         setLayout(new BorderLayout());
 
+        dsNSX = new ArrayList<>();
 
         JLabel lblTitle = new JLabel("Cập Nhật Nhà Sản Xuất");
         lblTitle.setFont(new Font("Arial", Font.BOLD, 24));
@@ -145,8 +153,9 @@ public class Form_CapNhatNhaSanXuat extends JPanel implements ActionListener {
         pnlInput.add(pnlButton);
 
         // Table for displaying data
-        String[] columnNames = {"Mã NSX", "Tên NSX", "Website", "Quốc Gia"};
+        String[] columnNames = {"Mã NSX", "Tên NSX", "Website", "Email", "Địa chỉ", "Số điện thoại"};
         tableModel = new DefaultTableModel(columnNames, 0);
+        updateTableNCC();
         table = new JTable(tableModel);
         JScrollPane tableScrollPane = new JScrollPane(table);
         table.setPreferredScrollableViewportSize(new Dimension(800, 300));
@@ -206,6 +215,29 @@ public class Form_CapNhatNhaSanXuat extends JPanel implements ActionListener {
         txtTenNSX.setText("");
         txtWebsite.setText("");
         cboQuocGia.setSelectedIndex(0);
+    }
+
+    private void updateTableNCC()  {
+        // Xóa dữ liệu cũ trong bảng thuốc
+        tableModel.setRowCount(0);
+        try {
+            NhaSanXuatService thuocService = (NhaSanXuatService) Naming.lookup("rmi://localhost:9090/nhaSanXuatService");
+            dsNSX = thuocService.getAll();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Lỗi kết nối đến dịch vụ thuốc: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+        // Thêm dữ liệu mới vào bảng thuốc
+        for (NhaCungCap ncc : dsNSX) {
+            Object[] rowData = {
+                    ncc.getMaNCC(),
+                    ncc.getTenNCC(),
+                    ncc.getWebsite(),
+                    ncc.getEmail(),
+                    ncc.getDiaChi(),
+                    ncc.getSoDienThoai()
+            };
+            tableModel.addRow(rowData);
+        }
     }
 
 }
