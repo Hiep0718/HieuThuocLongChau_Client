@@ -62,8 +62,7 @@ public class Form_CapNhatTaiKhoan extends JPanel implements ActionListener {
         lblMaTaiKhoan.setPreferredSize(new Dimension(100, 30));
         txtMaTaiKhoan = new JTextField(20);
         txtMaTaiKhoan.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
-        txtMaTaiKhoan.setEditable(false);
-        txtMaTaiKhoan.setFocusable(false);
+
         JPanel pnlMaTaiKhoan = new JPanel();
         pnlMaTaiKhoan.setLayout(new BoxLayout(pnlMaTaiKhoan, BoxLayout.X_AXIS));
         pnlMaTaiKhoan.setBackground(new Color(240, 248, 255));
@@ -207,50 +206,18 @@ public class Form_CapNhatTaiKhoan extends JPanel implements ActionListener {
             clearInputFields();
         }
         if(o.equals(btnThem)) {
-        	them();
+        	themVaoBang();
         }
         if(o.equals(btnXoa)) {
         	xoaTaiKhoan();
         }
     }
     
-    private void them(){
-        String id = txtID.getText().trim();
-        String maTK = txtMaTaiKhoan.getText().trim();
-        String matKhau = new String(txtMatKhau.getPassword()).trim();
-        String trangThai = cboTrangThai.getSelectedItem().toString();
-
-        // Kiểm tra dữ liệu đầu vào
-        if ( matKhau.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ thông tin tài khoản.", "Thông báo", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        TaiKhoan taiKhoan = new TaiKhoan();
-        taiKhoan.setTenTK(id); // nếu 'id' là tên tài khoản, còn nếu không thì xử lý theo đúng logic
-        taiKhoan.setMatKhau(matKhau);
-
-
-        try {
-            TaiKhoanService taiKhoanService = (TaiKhoanService) Naming.lookup("rmi://localhost:9090/taiKhoanService");
-            boolean result = taiKhoanService.themTaiKhoan(taiKhoan);
-
-            if (result) {
-                JOptionPane.showMessageDialog(this, "Thêm tài khoản thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-                updateTableTK();
-                clearInputFields();
-            } else {
-                JOptionPane.showMessageDialog(this, "Thêm tài khoản thất bại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Lỗi kết nối RMI!", "Lỗi", JOptionPane.ERROR_MESSAGE);
-        }
+    private void themVaoBang(){
 
     }
     
     private void capNhat() {
-
 
 
     }

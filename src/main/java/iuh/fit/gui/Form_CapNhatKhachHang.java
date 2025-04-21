@@ -1,12 +1,10 @@
 package iuh.fit.gui;
 
-import model.KhachHang;
-import services.KhachHangService;
-
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+<<<<<<< HEAD
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.rmi.Naming;
@@ -14,15 +12,14 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+=======
+>>>>>>> 619bcc925e138e62f5954933b18490ececb5c390
 
 public class Form_CapNhatKhachHang extends JPanel implements ActionListener {
     private JTextField txtMaKH, txtTenKH, txtDienThoai, txtEmail;
     private JTable table;
     private DefaultTableModel tableModel;
     private JButton btnThem, btnXoa;
-    private JTextField txtDiaChi, txtNgaySinh;
-    private List<KhachHang> dsKH;
-
 
     public Form_CapNhatKhachHang() {
         // Tiêu đề
@@ -76,23 +73,6 @@ public class Form_CapNhatKhachHang extends JPanel implements ActionListener {
         gbc.gridx = 1;
         txtEmail = new JTextField(15);
         pnlInput.add(txtEmail, gbc);
-        // Địa chỉ
-        gbc.weightx = 0.3;
-        gbc.gridx = 0; gbc.gridy = 4;
-        pnlInput.add(new JLabel("Địa chỉ:"), gbc);
-        gbc.weightx = 0.7;
-        gbc.gridx = 1;
-        txtDiaChi = new JTextField(15);
-        pnlInput.add(txtDiaChi, gbc);
-
-// Ngày sinh
-        gbc.weightx = 0.3;
-        gbc.gridx = 0; gbc.gridy = 5;
-        pnlInput.add(new JLabel("Ngày sinh (yyyy-mm-dd):"), gbc);
-        gbc.weightx = 0.7;
-        gbc.gridx = 1;
-        txtNgaySinh = new JTextField(15);
-        pnlInput.add(txtNgaySinh, gbc);
 
         // Các nút chức năng
         btnThem = new JButton("Thêm");
@@ -111,9 +91,8 @@ public class Form_CapNhatKhachHang extends JPanel implements ActionListener {
         pnlButton.add(btnXoa);
 
         // Bảng khách hàng
-        String[] columnNames = {"Mã khách hàng", "Tên khách hàng", "Số Điện Thoại", "Email", "Địa chỉ", "Ngày sinh"};
+        String[] columnNames = {"Mã KH", "Tên KH", "Điện Thoại", "Email"};
         tableModel = new DefaultTableModel(columnNames, 0);
-        updateTableKH();
         table = new JTable(tableModel);
         JScrollPane scrollPane = new JScrollPane(table);
 
@@ -132,6 +111,7 @@ public class Form_CapNhatKhachHang extends JPanel implements ActionListener {
         btnXoa.addActionListener(this);
 
     }
+<<<<<<< HEAD
 
     private void updateTableKH()  {
         // Xóa dữ liệu cũ trong bảng thuốc
@@ -205,4 +185,6 @@ public class Form_CapNhatKhachHang extends JPanel implements ActionListener {
 
 
     }
+=======
+>>>>>>> 619bcc925e138e62f5954933b18490ececb5c390
 }
