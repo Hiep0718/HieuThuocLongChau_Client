@@ -583,6 +583,7 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
             // Bỏ chọn để có thể chọn lại sau
             tblThuoc.clearSelection();
             tblThuocDaChon.setRowSelectionInterval(0, 0);
+            flag = 0;
         }
     }
 
@@ -608,50 +609,90 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
         }
         if (o.equals(btnLuuHD)){
             // Lưu hóa đơn
-            try {
-                HoaDonService hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:9090/hoaDonService");
-                KhachHangService khachHangService = (KhachHangService) Naming.lookup("rmi://localhost:9090/khachHangService");
-                ThuocService thuocService = (ThuocService) Naming.lookup("rmi://localhost:9090/thuocService");
-                if (tbmThuocDaChon.getRowCount() == 0) {
-                    JOptionPane.showMessageDialog(this, "Vui lòng chọn thuốc trước khi lưu hóa đơn!", "Thông báo", JOptionPane.WARNING_MESSAGE);
-                    return;
+            if(flag == 0){
+                try {
+                    HoaDonService hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:9090/hoaDonService");
+                    KhachHangService khachHangService = (KhachHangService) Naming.lookup("rmi://localhost:9090/khachHangService");
+                    ThuocService thuocService = (ThuocService) Naming.lookup("rmi://localhost:9090/thuocService");
+                    if (tbmThuocDaChon.getRowCount() == 0) {
+                        JOptionPane.showMessageDialog(this, "Vui lòng chọn thuốc trước khi lưu hóa đơn!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+                        return;
+                    }
+                    int maHD = Integer.parseInt(txtMaHD.getText());
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                    LocalDate date = LocalDate.parse(lblHienThiNgayTao.getText(), formatter);
+                    LocalDateTime dateTime = date.atStartOfDay(); // tạo LocalDateTime với giờ 00:00
+                    NhanVien nhanVien = Form_DangNhap.nhanVien;
+                    KhachHang khachHang = khachHangService.timBangSDT(cmbSDT.getText());
+                    HoaDon hoaDon = new HoaDon(nhanVien, khachHang, dateTime, "Đã thanh toán");
+                    List<ChiTietHoaDon> danhSachChiTiet = new ArrayList<>();
+                    for (int i = 0; i < tbmThuocDaChon.getRowCount(); i++) {
+                        Integer maThuoc = (Integer) tbmThuocDaChon.getValueAt(i, 0);
+                        Integer soLuong = (Integer) tbmThuocDaChon.getValueAt(i, 4);
+                        String donViTinh = (String) tbmThuocDaChon.getValueAt(i, 3);
+                        Double donGia = (Double) tbmThuocDaChon.getValueAt(i, 2);
+                        Thuoc thuoc = thuocService.findById(maThuoc);
+                        ChiTietHoaDon chiTietHoaDon = new ChiTietHoaDon( thuoc, hoaDon, soLuong , donGia, donViTinh);
+                        danhSachChiTiet.add(chiTietHoaDon);
+                    }
+                    if (hoaDonService.luuHoaDon(hoaDon, danhSachChiTiet)){
+                        JOptionPane.showMessageDialog(this, "Lưu hóa đơn thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                        txtKhachHang.setText("");
+                        txtTenThuoc.setText("");
+                        txtSoLuong.setText("");
+                        txtDonVi.setText("");
+                        txtDonGia.setText("");
+                        txtThanhTien.setText("");
+                        txtMaHD.setText(String.valueOf(hoaDonService.layMaHoaDonMoiNhat() + 1));
+                        updateTableThuoc();
+                        updatePhieuDatThuoc();
+                        // Xóa dữ liệu trong bảng thuốc đã chọn
+                        tbmThuocDaChon.setRowCount(0);
+                    }else {
+                        JOptionPane.showMessageDialog(this, "Lưu hóa đơn thất bại!", "Thông báo", JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this, "Lỗi lưu hóa đơn: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
                 }
-                int maHD = Integer.parseInt(txtMaHD.getText());
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-                LocalDate date = LocalDate.parse(lblHienThiNgayTao.getText(), formatter);
-                LocalDateTime dateTime = date.atStartOfDay(); // tạo LocalDateTime với giờ 00:00
-                NhanVien nhanVien = Form_DangNhap.nhanVien;
-                KhachHang khachHang = khachHangService.timBangSDT(cmbSDT.getText());
-                HoaDon hoaDon = new HoaDon(nhanVien, khachHang, dateTime, "Đã thanh toán");
-                List<ChiTietHoaDon> danhSachChiTiet = new ArrayList<>();
-                for (int i = 0; i < tbmThuocDaChon.getRowCount(); i++) {
-                    Integer maThuoc = (Integer) tbmThuocDaChon.getValueAt(i, 0);
-                    Integer soLuong = (Integer) tbmThuocDaChon.getValueAt(i, 4);
-                    String donViTinh = (String) tbmThuocDaChon.getValueAt(i, 3);
-                    Double donGia = (Double) tbmThuocDaChon.getValueAt(i, 2);
-                    Thuoc thuoc = thuocService.findById(maThuoc);
-                    ChiTietHoaDon chiTietHoaDon = new ChiTietHoaDon( thuoc, hoaDon, soLuong , donGia, donViTinh);
-                    danhSachChiTiet.add(chiTietHoaDon);
+            }else if(flag == 1) {
+                try {
+                    HoaDonService hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:9090/hoaDonService");
+                    KhachHangService khachHangService = (KhachHangService) Naming.lookup("rmi://localhost:9090/khachHangService");
+                    ThuocService thuocService = (ThuocService) Naming.lookup("rmi://localhost:9090/thuocService");
+                    ChiTietPhieuDatThuocService chiTietPhieuDatThuocService = (ChiTietPhieuDatThuocService) Naming.lookup("rmi://localhost:9090/chiTietPhieuDatThuocService");
+                    PhieuDatThuocService phieuDatThuocService = (PhieuDatThuocService) Naming.lookup("rmi://localhost:9090/phieuDatThuocService");
+                    if (tbmThuocDaChon.getRowCount() == 0) {
+                        JOptionPane.showMessageDialog(this, "Vui lòng chọn thuốc trước khi lưu hóa đơn!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+                        return;
+                    }
+                    // Get the selected item from combo box - make sure it's a phone number
+                    String sdt = cmbPDT.getSelectedItem().toString();
+
+                    // Use your existing method to find by SDT
+                    PhieuDatThuoc phieuDatThuoc = phieuDatThuocService.timTheoSDT(sdt);
+                    List<ChiTietPhieuDatThuoc> chiTietPhieuDatThuocs = chiTietPhieuDatThuocService.findByPhieuDatThuoc(phieuDatThuoc.getMaPDT());
+                    if (hoaDonService.addHoaDonFromPhieuDat(phieuDatThuoc.getMaPDT())){
+                        JOptionPane.showMessageDialog(this, "Lưu hóa đơn thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                        txtKhachHang.setText("");
+                        txtTenThuoc.setText("");
+                        txtSoLuong.setText("");
+                        txtDonVi.setText("");
+                        txtDonGia.setText("");
+                        txtThanhTien.setText("");
+                        txtMaHD.setText(String.valueOf(hoaDonService.layMaHoaDonMoiNhat() + 1));
+                        updateTableThuoc();
+                        updatePhieuDatThuoc();
+                        // Xóa dữ liệu trong bảng thuốc đã chọn
+                        tbmThuocDaChon.setRowCount(0);
+                        flag =0;
+                    }else {
+                        JOptionPane.showMessageDialog(this, "Lưu hóa đơn thất bại!", "Thông báo", JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this, "Lỗi lưu hóa đơn: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
                 }
-                if (hoaDonService.luuHoaDon(hoaDon, danhSachChiTiet)){
-                    JOptionPane.showMessageDialog(this, "Lưu hóa đơn thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-                    txtKhachHang.setText("");
-                    txtTenThuoc.setText("");
-                    txtSoLuong.setText("");
-                    txtDonVi.setText("");
-                    txtDonGia.setText("");
-                    txtThanhTien.setText("");
-                    txtMaHD.setText(String.valueOf(hoaDonService.layMaHoaDonMoiNhat() + 1));
-                    updateTableThuoc();
-                    updatePhieuDatThuoc();
-                    // Xóa dữ liệu trong bảng thuốc đã chọn
-                    tbmThuocDaChon.setRowCount(0);
-                }else {
-                    JOptionPane.showMessageDialog(this, "Lưu hóa đơn thất bại!", "Thông báo", JOptionPane.ERROR_MESSAGE);
-                }
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Lỗi lưu hóa đơn: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
+
         }
         if (o.equals(btnTaoMoiHD)) {
             // Xóa dữ liệu trong các trường
@@ -664,6 +705,7 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
             // Xóa dữ liệu trong bảng thuốc đã chọn
             tbmThuocDaChon.setRowCount(0);
             updatePhieuDatThuoc();
+            flag = 0;
         }
         if (o.equals(btnThemKH)) {
             // Tạo đối tượng Form_ADDKH
@@ -705,6 +747,7 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
                         };
                         tbmThuocDaChon.addRow(rowData);
                     }
+                    flag = 1;
                 } else {
                     JOptionPane.showMessageDialog(this, "Không tìm thấy chi tiết phiếu đặt thuốc!", "Thông báo", JOptionPane.WARNING_MESSAGE);
                 }
