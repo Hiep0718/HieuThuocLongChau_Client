@@ -15,6 +15,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.rmi.Naming;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -70,9 +71,10 @@ public class Form_PhieuNhapThuoc extends JPanel implements ActionListener {
         gbc.gridx = 0;
         gbc.gridy = 0;
 
-        lblMaPNT = new JLabel("Mã phiếu nhập:");
+        lblMaPNT = new JLabel("Mã nhân viên:");
         txtMaPNT = new JTextField(15);
         customizeTextField(txtMaPNT, false);
+        txtMaPNT.setText(Form_DangNhap.nhanVien.getMaNV() + "");
         panelTacVu.add(lblMaPNT, gbc);
         gbc.gridx = 1;
         panelTacVu.add(txtMaPNT, gbc);
@@ -451,7 +453,6 @@ public class Form_PhieuNhapThuoc extends JPanel implements ActionListener {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
             String ngayHienTai = sdf.format(new Date());
 
-            updateThanhTien();
         }
     }
 
@@ -502,26 +503,16 @@ public class Form_PhieuNhapThuoc extends JPanel implements ActionListener {
     private void updateTongTien() {
         double tongTien = 0;
         for (int i = 0; i < tbmThuocDaChon.getRowCount(); i++) {
-            tongTien += Double.parseDouble(tbmThuocDaChon.getValueAt(i, 8).toString());
+            tongTien += Double.parseDouble(tbmThuocDaChon.getValueAt(i, 7).toString());
         }
-        txtThanhTien.setText(String.valueOf(tongTien));
-    }
+        DecimalFormat df = new DecimalFormat("#,###");
 
-    private void updateThanhTien() {
-        // Cập nhật thành tiền dựa trên số lượng và đơn giá
-        try {
-            int soLuong = Integer.parseInt(txtSoLuong.getText());
-            double donGia = Double.parseDouble(txtDonGia.getText());
-            double thanhTien = soLuong * donGia;
-            txtThanhTien.setText(String.valueOf(thanhTien));
-        } catch (NumberFormatException e) {
-            txtThanhTien.setText("0");
-        }
+        // Gán vào text field (có thể thêm "VNĐ" nếu muốn)
+        txtThanhTien.setText(df.format(tongTien) + " VNĐ");
     }
 
     private void clearForm() {
         // Xóa tất cả các trường trong form
-        txtMaPNT.setText("");
         txtTenThuoc.setText("");
         txtSoLuong.setText("");
         txtDonVi.setText("");
@@ -558,6 +549,8 @@ public class Form_PhieuNhapThuoc extends JPanel implements ActionListener {
             double thanhTien = soLuong * donGia;
             tbmThuocDaChon.addRow(new Object[]{maThuoc, tenThuoc, ngaySX, hanSD, soLuong, donGia, donVi, thanhTien});
             // Xóa thông tin trong form để nhập thuốc mới
+            updateTongTien();
+
             txtTenThuoc.setText("");
             txtSoLuong.setText("");
             txtDonVi.setText("");
