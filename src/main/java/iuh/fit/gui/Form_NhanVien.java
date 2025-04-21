@@ -1,9 +1,15 @@
 package iuh.fit.gui;
 
+import model.NhanVien;
+import services.NhanVienService;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.rmi.Naming;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class Form_NhanVien extends JPanel {
@@ -15,12 +21,15 @@ public class Form_NhanVien extends JPanel {
     private JTextField jtex1, jtex2, jtex3, jtex4, jtex5, jtex6, jtex7;
     private JButton btn_Them, btn_Xoa, btn_XoaTrang;
 
+    private List<NhanVien> dsNV;
+
     public Form_NhanVien() {
         form();
     }
 
     public void form() {
         setLayout(new BorderLayout());
+        dsNV = new ArrayList<>();
         setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         // Title Panel
@@ -100,11 +109,10 @@ public class Form_NhanVien extends JPanel {
         penTable.setBorder(BorderFactory.createTitledBorder("Danh sách nhân viên"));
         penTable.setPreferredSize(new Dimension(300, 350)); // Increased height for the table panel (100px more)
 
-        Object[] col = {"Mã NV", "Họ Tên","Tuổi","Giới tính", "Điện thoại","Email", "Địa chỉ", "Trạng thái", "Chức vụ"};
+        Object[] col = {"Mã NV","Tên nhân viên", "Chú thích","Chức vụ", "Địa chỉ","Email", "Ngày sinh", "Ngày vào làm", "Số điện thoại"};
         table_modal = new DefaultTableModel(col, 0);
+        updateTableNhanVien();
         table = new JTable(table_modal);
-
-
 
         jcroll = new JScrollPane(table);
         jcroll.setPreferredSize(new Dimension(300, 300)); // Adjusted height for the scroll pane
@@ -141,5 +149,31 @@ public class Form_NhanVien extends JPanel {
         row.add(label2);
         row.add(textField2);
         return row;
+    }
+
+    private void updateTableNhanVien()  {
+        // Xóa dữ liệu cũ trong bảng thuốc
+        table_modal.setRowCount(0);
+        try {
+            NhanVienService NVService = (NhanVienService) Naming.lookup("rmi://localhost:9090/nhanVienService");
+            dsNV = NVService.getAll();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Lỗi kết nối đến dịch vụ nhân viên: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+        // Thêm dữ liệu mới vào bảng thuốc
+        for (NhanVien nv : dsNV) {
+            Object[] rowData = {
+                    nv.getMaNV(),
+                    nv.getTenNV(),
+                    nv.getChuThich(),
+                    nv.getChucVu(),
+                    nv.getDiaChi(),
+                    nv.getEmail(),
+                    nv.getNgaySinh(),
+                    nv.getNgayVaoLam(),
+                    nv.getSoDienThoai()
+            };
+            table_modal.addRow(rowData);
+        }
     }
 }
