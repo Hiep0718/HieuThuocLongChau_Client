@@ -400,7 +400,7 @@ public class Form_PhieuDat extends JPanel implements MouseListener,ActionListene
 
 	   ArrayList<String> phoneList = new ArrayList<String>();
 	   try {
-		   KhachHangService khachHangService = (KhachHangService) Naming.lookup("rmi://localhost:9090/khachHangService");
+		   KhachHangService khachHangService = (KhachHangService) Naming.lookup("rmi://DESKTOP-UGP738F:9090/khachHangService");
 		   List<KhachHang> dsKH = khachHangService.getAll();
 		   dsKH.forEach(khachHang -> {
 			   phoneList.add(khachHang.getSoDienThoai());
@@ -517,7 +517,7 @@ public class Form_PhieuDat extends JPanel implements MouseListener,ActionListene
 		// Xóa dữ liệu cũ trong bảng thuốc
 		modelThongTinThuoc.setRowCount(0);
 		try {
-			ThuocService thuocService = (ThuocService) Naming.lookup("rmi://localhost:9090/thuocService");
+			ThuocService thuocService = (ThuocService) Naming.lookup("rmi://DESKTOP-UGP738F:9090/thuocService");
 			dsThuoc = thuocService.getAll();
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(this, "Lỗi kết nối đến dịch vụ thuốc: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
@@ -596,9 +596,9 @@ public class Form_PhieuDat extends JPanel implements MouseListener,ActionListene
 				if(o.equals(buttonLuu)) {
 					try {
 					String ngaykhoitao= getCurrentDate();
-						PhieuDatThuocService phieuDatThuocService = (PhieuDatThuocService) Naming.lookup("rmi://localhost:9090/phieuDatThuocService");
-						KhachHangService khachHangService = (KhachHangService) Naming.lookup("rmi://localhost:9090/khachHangService");
-						ThuocService thuocService = (ThuocService) Naming.lookup("rmi://localhost:9090/thuocService");
+						PhieuDatThuocService phieuDatThuocService = (PhieuDatThuocService) Naming.lookup("rmi://DESKTOP-UGP738F:9090/phieuDatThuocService");
+						KhachHangService khachHangService = (KhachHangService) Naming.lookup("rmi://DESKTOP-UGP738F:9090/khachHangService");
+						ThuocService thuocService = (ThuocService) Naming.lookup("rmi://DESKTOP-UGP738F:9090/thuocService");
 						if (tableGioHang.getRowCount() == 0) {
 							JOptionPane.showMessageDialog(this, "Vui lòng chọn thuốc trước khi lưu hóa đơn!", "Thông báo", JOptionPane.WARNING_MESSAGE);
 							return;
@@ -637,10 +637,30 @@ public class Form_PhieuDat extends JPanel implements MouseListener,ActionListene
 					
 
 				if(o.equals(buttonHuyBo)) {
-					
+					xoaTrang();
+					txtSDT.setText("");
+					txtTenKH.setText("");
+					txtTongTien.setText("");
+					modelGioHang.setRowCount(0);
 				}
 				 if(o.equals(btndelete)){
+					 int row = tableGioHang.getSelectedRow();
+					 if(row >= 0){
+						 String maThuoc= (String) modelGioHang.getValueAt(row, 0);
+						 int maThuocInt=Integer.parseInt(maThuoc);
+						 int slT= (int) modelThongTinThuoc.getValueAt(maThuocInt-1, 4);
 
+						 int slGH=(int) modelGioHang.getValueAt(row, 2);
+
+
+
+						 modelThongTinThuoc.setValueAt(slT+slGH, maThuocInt-1, 4);
+						 modelGioHang.removeRow(row);
+
+
+
+
+					 }
 				 }
 	}
 
