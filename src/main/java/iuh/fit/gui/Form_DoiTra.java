@@ -521,10 +521,15 @@ public class Form_DoiTra extends JPanel implements ActionListener{
                 // 2. Duyệt table3 - thuốc ĐỔI
                 int rowCountDoi = table3.getRowCount();
                 for (int i = 0; i < rowCountDoi; i++) {
+                    String maThuoc = table3.getValueAt(i, 0).toString();
                     int soLuong = Integer.parseInt(table3.getValueAt(i, 2).toString());
                     double donGia = Double.parseDouble(table3.getValueAt(i, 3).toString());
                     tongTienTra += soLuong * donGia;
+
+                    //Thêm thuốc vào cơ sở dữ lieu
+                    thuocService.capNhatSoLuongThuoc(maThuoc, soLuong);
                 }
+
 
                 System.out.println("tiền trả: " + tongTienTra);
                 double tienChenhLech = tongTienThu - tongTienTra;
@@ -549,15 +554,18 @@ public class Form_DoiTra extends JPanel implements ActionListener{
                 List<ChiTietHoaDon> danhSachChiTiet = new ArrayList<>();
 
                 for (int i = 0; i < rowCount; i++) {
-                    int maThuoc = Integer.parseInt(table1.getValueAt(i, 1).toString());
-                    String tenThuoc = table1.getValueAt(i, 2).toString();
-                    int soLuong = Integer.parseInt(table1.getValueAt(i, 3).toString());
-                    double donGia = Double.parseDouble(table1.getValueAt(i, 4).toString());
-                    String donViTinh = table1.getValueAt(i, 5).toString();
+                    Object maHDValue = table1.getValueAt(i, 0);
+                    if (maHDValue == null || maHDValue.toString().trim().isEmpty()) {
+                        int maThuoc = Integer.parseInt(table1.getValueAt(i, 1).toString());
+                        String tenThuoc = table1.getValueAt(i, 2).toString();
+                        int soLuong = Integer.parseInt(table1.getValueAt(i, 3).toString());
+                        double donGia = Double.parseDouble(table1.getValueAt(i, 4).toString());
+                        String donViTinh = table1.getValueAt(i, 5).toString();
 
-                    Thuoc thuoc = thuocService.findById(maThuoc);
-                    ChiTietHoaDon chiTietHoaDon = new ChiTietHoaDon( thuoc, hd, soLuong , donGia, donViTinh);
-                    danhSachChiTiet.add(chiTietHoaDon);
+                        Thuoc thuoc = thuocService.findById(maThuoc);
+                        ChiTietHoaDon chiTietHoaDon = new ChiTietHoaDon( thuoc, hd, soLuong , donGia, donViTinh);
+                        danhSachChiTiet.add(chiTietHoaDon);
+                    }
 
                 }if (hoaDonService.luuHoaDon(hd, danhSachChiTiet)){
                     JOptionPane.showMessageDialog(this, "Lưu hóa đơn thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
@@ -573,8 +581,6 @@ public class Form_DoiTra extends JPanel implements ActionListener{
 
 
 
-
-
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }
@@ -586,8 +592,18 @@ public class Form_DoiTra extends JPanel implements ActionListener{
 
             try {
                 HoaDonService hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:9090/hoaDonService");
-
+                ThuocService thuocService = (ThuocService) Naming.lookup("rmi://localhost:9090/thuocService");
                 int maHD = Integer.parseInt(jtexMaHD.getText().trim());
+
+                String trangThaiHoaDon = hoaDonService.layTrangThaiHoaDon(maHD); // Giả sử có phương thức này trả về trạng thái của hóa đơn
+
+                // Nếu hóa đơn đã trả thì thông báo và không thực hiện tiếp
+                if ("Đã trả hàng".equals(trangThaiHoaDon)) {
+                    JOptionPane.showMessageDialog(null, "Hóa đơn này đã được trả hàng trước đó.", "Thông báo", JOptionPane.WARNING_MESSAGE);
+                    return; // Dừng lại không thực hiện cập nhật
+                }
+
+
                 boolean success = hoaDonService.capNhatTrangThaiHoaDon(maHD, "Đã trả hàng");
 
                 if (success) {
@@ -606,6 +622,15 @@ public class Form_DoiTra extends JPanel implements ActionListener{
                     txtTienTra.setText(formatter.format(tongTienHoan));
                 } else {
                     JOptionPane.showMessageDialog(null, "Cập nhật trạng thái hóa đơn thất bại.", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                }
+
+                int rowCountDoi = table3.getRowCount();
+                for (int i = 0; i < rowCountDoi; i++) {
+                    String maThuoc = table3.getValueAt(i, 0).toString();
+                    int soLuong = Integer.parseInt(table3.getValueAt(i, 2).toString());
+                    System.out.println("Đang thêm số lượng");
+                    //Thêm thuốc vào cơ sở dữ lieu
+                    boolean sc =  thuocService.capNhatSoLuongThuoc(maThuoc, soLuong);
                 }
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
