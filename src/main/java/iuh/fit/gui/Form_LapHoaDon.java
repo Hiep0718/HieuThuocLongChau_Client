@@ -616,38 +616,42 @@ public class Form_LapHoaDon extends JPanel implements ActionListener{
                         JOptionPane.showMessageDialog(this, "Vui lòng chọn thuốc trước khi lưu hóa đơn!", "Thông báo", JOptionPane.WARNING_MESSAGE);
                         return;
                     }
-                    int maHD = Integer.parseInt(txtMaHD.getText());
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
                     LocalDate date = LocalDate.parse(lblHienThiNgayTao.getText(), formatter);
                     LocalDateTime dateTime = date.atStartOfDay(); // tạo LocalDateTime với giờ 00:00
                     NhanVien nhanVien = Form_DangNhap.nhanVien;
                     KhachHang khachHang = khachHangService.timBangSDT(cmbSDT.getText());
-                    HoaDon hoaDon = new HoaDon(nhanVien, khachHang, dateTime, "Đã thanh toán");
-                    List<ChiTietHoaDon> danhSachChiTiet = new ArrayList<>();
-                    for (int i = 0; i < tbmThuocDaChon.getRowCount(); i++) {
-                        Integer maThuoc = (Integer) tbmThuocDaChon.getValueAt(i, 0);
-                        Integer soLuong = (Integer) tbmThuocDaChon.getValueAt(i, 4);
-                        String donViTinh = (String) tbmThuocDaChon.getValueAt(i, 3);
-                        Double donGia = (Double) tbmThuocDaChon.getValueAt(i, 2);
-                        Thuoc thuoc = thuocService.findById(maThuoc);
-                        ChiTietHoaDon chiTietHoaDon = new ChiTietHoaDon( thuoc, hoaDon, soLuong , donGia, donViTinh);
-                        danhSachChiTiet.add(chiTietHoaDon);
-                    }
-                    if (hoaDonService.luuHoaDon(hoaDon, danhSachChiTiet)){
-                        JOptionPane.showMessageDialog(this, "Lưu hóa đơn thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-                        txtKhachHang.setText("");
-                        txtTenThuoc.setText("");
-                        txtSoLuong.setText("");
-                        txtDonVi.setText("");
-                        txtDonGia.setText("");
-                        txtThanhTien.setText("");
-                        txtMaHD.setText(String.valueOf(hoaDonService.layMaHoaDonMoiNhat() + 1));
-                        updateTableThuoc();
-                        updatePhieuDatThuoc();
-                        // Xóa dữ liệu trong bảng thuốc đã chọn
-                        tbmThuocDaChon.setRowCount(0);
+                    if (khachHang != null){
+                        HoaDon hoaDon = new HoaDon(nhanVien, khachHang, dateTime, "Đã thanh toán");
+                        List<ChiTietHoaDon> danhSachChiTiet = new ArrayList<>();
+                        for (int i = 0; i < tbmThuocDaChon.getRowCount(); i++) {
+                            Integer maThuoc = (Integer) tbmThuocDaChon.getValueAt(i, 0);
+                            Integer soLuong = (Integer) tbmThuocDaChon.getValueAt(i, 4);
+                            String donViTinh = (String) tbmThuocDaChon.getValueAt(i, 3);
+                            Double donGia = (Double) tbmThuocDaChon.getValueAt(i, 2);
+                            Thuoc thuoc = thuocService.findById(maThuoc);
+                            ChiTietHoaDon chiTietHoaDon = new ChiTietHoaDon( thuoc, hoaDon, soLuong , donGia, donViTinh);
+                            danhSachChiTiet.add(chiTietHoaDon);
+                        }
+                        if (hoaDonService.luuHoaDon(hoaDon, danhSachChiTiet)){
+                            JOptionPane.showMessageDialog(this, "Lưu hóa đơn thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                            txtKhachHang.setText("");
+                            txtTenThuoc.setText("");
+                            txtSoLuong.setText("");
+                            txtDonVi.setText("");
+                            txtDonGia.setText("");
+                            txtThanhTien.setText("");
+                            txtMaHD.setText(String.valueOf(hoaDonService.layMaHoaDonMoiNhat() + 1));
+                            updateTableThuoc();
+                            updatePhieuDatThuoc();
+                            // Xóa dữ liệu trong bảng thuốc đã chọn
+                            tbmThuocDaChon.setRowCount(0);
+                        }else {
+                            JOptionPane.showMessageDialog(this, "Lưu hóa đơn thất bại!", "Thông báo", JOptionPane.ERROR_MESSAGE);
+                        }
                     }else {
-                        JOptionPane.showMessageDialog(this, "Lưu hóa đơn thất bại!", "Thông báo", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(this, "Khách hàng không tồn tại!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+                        return;
                     }
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(this, "Lỗi lưu hóa đơn: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
