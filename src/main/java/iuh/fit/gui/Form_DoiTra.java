@@ -489,6 +489,17 @@ public class Form_DoiTra extends JPanel implements ActionListener{
                 HoaDonService hoaDonService = (HoaDonService) Naming.lookup("rmi://localhost:9090/hoaDonService");
                 KhachHangService khachHangService = (KhachHangService) Naming.lookup("rmi://localhost:9090/khachHangService");
                 ThuocService thuocService = (ThuocService) Naming.lookup("rmi://localhost:9090/thuocService");
+
+                int maHD = Integer.parseInt(jtexMaHD.getText().trim());
+
+                String trangThaiHoaDon = hoaDonService.layTrangThaiHoaDon(maHD); // Giả sử có phương thức này trả về trạng thái của hóa đơn
+
+                // Nếu hóa đơn đã trả thì thông báo và không thực hiện tiếp
+                if ("Hóa đơn đã đổi".equals(trangThaiHoaDon) || "Đã trả hàng".equals(trangThaiHoaDon)) {
+                    JOptionPane.showMessageDialog(null, "Hóa đơn này đã được đổi hàng trước đó.", "Thông báo", JOptionPane.WARNING_MESSAGE);
+                    return; // Dừng lại không thực hiện cập nhật
+                }
+
                 int maNV = Integer.parseInt(jtextenNV.getText().trim());
                 String trangThai = "";
                 NhanVien nv = Form_DangNhap.nhanVien;
@@ -578,6 +589,8 @@ public class Form_DoiTra extends JPanel implements ActionListener{
                 }else {
                     JOptionPane.showMessageDialog(this, "Lưu hóa đơn thất bại!", "Thông báo", JOptionPane.ERROR_MESSAGE);
                 }
+
+                hoaDonService.capNhatTrangThaiHoaDon(maHD, "Hóa đơn đã đổi");
 
 
 
